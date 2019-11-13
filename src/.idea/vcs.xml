@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/src/github.com/go-sql-driver/mysql" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/gojuno/go.osrm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/jmoiron/sqlx" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/kisielk/sqlstruct" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/lib/pq" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/maddevsio/osrm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/mattn/go-sqlite3" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/paulmach/go.geo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/paulmach/orb" vcs="Git" />
+  </component>
+</project>
