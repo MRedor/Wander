@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/labstack/echo"
 	"io/ioutil"
 	"log"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 	sqlx "github.com/jmoiron/sqlx"
-
 	//osrm "github.com/maddevsio/osrm"
 	//osrm "github.com/gojuno/go.osrm"
 )
@@ -31,34 +31,34 @@ func initDB() *sqlx.DB {
 }
 
 type Point struct {
-	Id int `db:"id"`
-	Lat float64 `db:"lat"`
-	Lon float64 `db:"lon"`
-	ObjectType string `db:"type"`
-	Name sql.NullString `db:"name"`
-	Description sql.NullString `db:"description"`
-	Time sql.NullString `db:"time"`
-	NameEnglish sql.NullString `db:"name_en"`
+	Id                 int            `db:"id"`
+	Lat                float64        `db:"lat"`
+	Lon                float64        `db:"lon"`
+	ObjectType         string         `db:"type"`
+	Name               sql.NullString `db:"name"`
+	Description        sql.NullString `db:"description"`
+	Time               sql.NullString `db:"time"`
+	NameEnglish        sql.NullString `db:"name_en"`
 	DescriptionEnglish sql.NullString `db:"description_en"`
-	Img sql.NullString `db:"img"`
-	IdInGraph int `db:"id_point_in_graph"`
+	Img                sql.NullString `db:"img"`
+	IdInGraph          int            `db:"id_point_in_graph"`
 	// updated -- чет не очень понятно что это такое
-	Updated string `db:"updated"`
-	Active bool `db:"active"`
-	Address sql.NullString `db:"address"`
-	Prices sql.NullString `db:"prices"`
-	Url sql.NullString `db:"url"`
-	NightDescription sql.NullString `db:"night_description"`
-	NightImage sql.NullString `db:"night_photo"`
-	NightType sql.NullString `db:"night_type"`
-	ActiveOnlyAtNight sql.NullInt64 `db:"active_only_at_night"`
+	Updated           string         `db:"updated"`
+	Active            bool           `db:"active"`
+	Address           sql.NullString `db:"address"`
+	Prices            sql.NullString `db:"prices"`
+	Url               sql.NullString `db:"url"`
+	NightDescription  sql.NullString `db:"night_description"`
+	NightImage        sql.NullString `db:"night_photo"`
+	NightType         sql.NullString `db:"night_type"`
+	ActiveOnlyAtNight sql.NullInt64  `db:"active_only_at_night"`
 }
 
 type Path struct {
-	name string
-	distanceMeters int
+	name            string
+	distanceMeters  int
 	durationMinutes int
-	points []Point
+	points          []Point
 	// что тут еще нужно?
 }
 
@@ -73,7 +73,7 @@ func PointById(id int) Point {
 	return point
 }
 
-func PointsInRange(/* диапазон в каком-то виде. В каком? */) []Point {
+func PointsInRange( /* диапазон в каком-то виде. В каком? */ ) []Point {
 	// Выбирать несколько рандомных
 	// Сколько?
 	return nil
@@ -86,15 +86,15 @@ func NameByPath(path Path) string {
 
 type OSRMGeometry struct {
 	Coordinates [][2]float64
-	Type string
+	Type        string
 }
 
 type Route struct {
 	Geometry OSRMGeometry
-	Legs []struct{
-		Summary string
+	Legs     []struct {
+		Summary  string
 		Duration float64
-		Steps []string
+		Steps    []string
 		Distance float64
 	}
 	Duration float64
@@ -102,12 +102,12 @@ type Route struct {
 }
 
 type OSRMResponse struct {
-	Code string
+	Code   string
 	Routes []Route
 	// не используем
-	WayPoints []struct{
-		Hint string
-		Name string
+	WayPoints []struct {
+		Hint     string
+		Name     string
 		location [2]float64
 	}
 }
@@ -131,11 +131,11 @@ func getOSRM() {
 	fmt.Println(data)
 
 	/*
-	var result OSRMResponse
-	defer resp.Body.Close()
-	json.NewDecoder(resp.Body).Decode(result)
-	fmt.Println(result)
-	 */
+		var result OSRMResponse
+		defer resp.Body.Close()
+		json.NewDecoder(resp.Body).Decode(result)
+		fmt.Println(result)
+	*/
 }
 
 func ABPath(a, b Point) Path {
@@ -146,8 +146,16 @@ func CircularPath(start Point) Path {
 	return Path{}
 }
 
-func main()  {
-	fmt.Println("kek")
+func main() {
+	e := echo.New()
+	e.GET("/points/getRandom", pointsGetRandom)
+	e.GET("/path/get", pathGet)
+	e.GET("/path/getRound", pathGetRound)
+	//...
+
+	// Start server
+	e.Logger.Fatal(e.Start(":1323"))
+	//fmt.Println("kek")
 	//fmt.Println(PointById(10))
-	getOSRM()
+	//getOSRM()
 }
