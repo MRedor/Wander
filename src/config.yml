@@ -1,0 +1,4 @@
+database:
+  user: "wander"
+  password: "wanderpassword"
+  table: "wander"
