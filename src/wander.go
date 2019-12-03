@@ -24,14 +24,14 @@ type Config struct {
 	} `yaml:"database"`
 }
 
-func main() {
+func startServer() {
 	e := echo.New()
 
 	e.GET("/api/objects/:id", getObjectById)
 	e.GET("/api/objects/getFeatured/:boundingBox", getRandomObjects)
+	e.POST("/api/routes/get", getRoute)
 
 	//TODO:
-	e.POST("/api/routes/get", getRoute)
 	e.POST("/api/routes/removePoint", removePoint)
 	e.GET("/api/routes/:id", getRouteById)
 	e.GET("/api/list/:id", getListById)
@@ -39,6 +39,11 @@ func main() {
 	e.POST("/api/feedback", saveFeedback)
 
 	e.Logger.Fatal(e.Start(":1323"))
+}
+
+func main() {
+	startServer()
+
 }
 
 func readConfig() {
