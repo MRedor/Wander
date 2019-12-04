@@ -12,8 +12,8 @@ type Route struct {
 	Length  float64  `json:"length"` //meters
 	Time    int      `json:"time"`   //seconds
 	Name    string   `json:"name"`
-	type_ string
-	radius int
+	type_   string
+	radius  int
 }
 
 func NameByRoute(route *Route) string {
