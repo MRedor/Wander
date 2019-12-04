@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS  `routes` (
     `start_lon` float(10,7) NOT NULL,
     `finish_lat` float(10,7) NOT NULL,
     `finish_lon` float(10,7) NOT NULL,
+    `radius` int(11),
     `length` float(10,7) NOT NULL,
     `time` int(11) NOT NULL,
     `objects` text,

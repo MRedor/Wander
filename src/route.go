@@ -12,6 +12,8 @@ type Route struct {
 	Length  float64  `json:"length"` //meters
 	Time    int      `json:"time"`   //seconds
 	Name    string   `json:"name"`
+	type_ string
+	radius int
 }
 
 func NameByRoute(route *Route) string {
@@ -21,22 +23,24 @@ func NameByRoute(route *Route) string {
 }
 
 func ABRoute(a, b Point) (*Route, error) {
+	if existDirectRoute(a, b) {
+		return getDirectRoute(a, b), nil
+	}
 	objects := RandomObjectsInRange(a, b, 10)
 	sort.Slice(objects, func(i, j int) bool {
 		return a.distance(objects[i].Position) < a.distance(objects[j].Position)
 	})
-	result, err := getOSRM(objects).Route()
-	if err != nil {
-		//ищем маршрут между парами
-	}
-	result.Objects = objects
-	// пушить в бд и брать нормальный id
-	result.Id = 0
-	result.Name = NameByRoute(result)
-	return result, nil
+	route, err := routeByObjects(objects)
+	route.type_ = "direct"
+	route.radius = 0
+	insertRoute(*route)
+	return route, err
 }
 
-func CircularRoute(start Point, radius int) (*Route, error) {
+func RoundRoute(start Point, radius int) (*Route, error) {
+	if existRoundRoute(start, radius) {
+		return getRoundRoute(start, radius), nil
+	}
 	a := Point{
 		Lat: start.Lat - float64(radius),
 		Lon: start.Lon - float64(radius),
@@ -55,7 +59,11 @@ func CircularRoute(start Point, radius int) (*Route, error) {
 		y2 := objects[j].Position.Lon - start.Lon
 		return (x1*y2 - x2*y1) < 0
 	})
-	return routeByObjects(objects)
+	route, err := routeByObjects(objects)
+	route.type_ = "round"
+	route.radius = radius
+	insertRoute(*route)
+	return route, err
 }
 
 func routeByObjects(objects []Object) (*Route, error) {
@@ -64,7 +72,10 @@ func routeByObjects(objects []Object) (*Route, error) {
 		//ищем маршрут между парами
 	}
 	result.Objects = objects
-	result.Id = 0
+	result.Id, err = freeIdInRoutes()
+	if err != nil {
+		return nil, err
+	}
 	result.Name = NameByRoute(result)
 	return result, nil
 }

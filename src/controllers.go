@@ -90,7 +90,7 @@ func getRoute(c echo.Context) error {
 	if req.Type == "direct" {
 		route, err = ABRoute(req.Points[0], req.Points[1])
 	} else {
-		route, err = CircularRoute(req.Points[0], req.Radius)
+		route, err = RoundRoute(req.Points[0], req.Radius)
 	}
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Error{Code: 0, Message: ""})
@@ -98,12 +98,21 @@ func getRoute(c echo.Context) error {
 	return c.JSON(http.StatusOK, *route)
 }
 
-func removePoint(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
+func getRouteById(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, Error{Code: 0, Message: "id should be an integer"})
+	}
+	route, err := routeById(id)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, Error{Code: 0, Message: "no route with given id"})
+	}
+	return c.JSON(http.StatusOK, *route)
 }
 
-func getRouteById(c echo.Context) error {
+func removePoint(c echo.Context) error {
 	// todo:
 	return c.JSON(http.StatusOK, "test response")
 }
