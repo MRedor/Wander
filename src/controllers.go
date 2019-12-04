@@ -80,7 +80,6 @@ func getRandomObjects(c echo.Context) error {
 }
 
 func getRoute(c echo.Context) error {
-	// todo:
 	req := RouteRequest{}
 	err := json.NewDecoder(c.Request().Body).Decode(&req)
 	if err != nil {
