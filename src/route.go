@@ -24,7 +24,7 @@ func NameByRoute(route *Route) string {
 
 func ABRoute(a, b Point) (*Route, error) {
 	if existDirectRoute(a, b) {
-		return getDirectRoute(a, b), nil
+		return getDirectRoute(a, b)
 	}
 	objects := RandomObjectsInRange(a, b, 10)
 	sort.Slice(objects, func(i, j int) bool {
@@ -39,7 +39,7 @@ func ABRoute(a, b Point) (*Route, error) {
 
 func RoundRoute(start Point, radius int) (*Route, error) {
 	if existRoundRoute(start, radius) {
-		return getRoundRoute(start, radius), nil
+		return getRoundRoute(start, radius)
 	}
 	a := Point{
 		Lat: start.Lat - float64(radius),
@@ -88,10 +88,18 @@ func routeById(id int64) (*Route, error) {
 	return dbroute.Route(), nil
 }
 
-func getDirectRoute(a, b Point) *Route {
-	return &Route{}
+func getDirectRoute(a, b Point) (*Route, error) {
+	dbroute, err := getDirectDBRoute(a, b)
+	if err != nil {
+		return nil, err
+	}
+	return dbroute.Route(), nil
 }
 
-func getRoundRoute(start Point, radius int) *Route {
-	return &Route{}
+func getRoundRoute(start Point, radius int) (*Route, error) {
+	dbroute, err := getRoundDBRoute(start, radius)
+	if err != nil {
+		return nil, err
+	}
+	return dbroute.Route(), nil
 }

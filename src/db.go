@@ -107,8 +107,8 @@ func insertRoute(route Route) {
 	)
 }
 
-func getRoundDBRoute(start Point, radius int) *DBRoute {
-	return &DBRoute{}
+func getRoundDBRoute(start Point, radius int) (*DBRoute, error) {
+	return &DBRoute{}, nil
 }
 
 func existRoundRoute(start Point, radius int) bool {
@@ -128,8 +128,8 @@ func existRoundRoute(start Point, radius int) bool {
 	return true
 }
 
-func getDirectDBRoute(a, b Point) *DBRoute {
-	return &DBRoute{}
+func getDirectDBRoute(a, b Point) (*DBRoute, error) {
+	return &DBRoute{}, nil
 }
 
 func existDirectRoute(a, b Point) bool {
