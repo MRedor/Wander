@@ -6,7 +6,20 @@ import (
 	"fmt"
 	"log"
 	"math"
+
+	sqlx "github.com/jmoiron/sqlx"
 )
+
+func initDB() *sqlx.DB {
+	source := fmt.Sprintf("%s:%s@/%s",
+		cfg.Database.Username, cfg.Database.Password, cfg.Database.Table)
+	db, err := sqlx.Open("mysql", source)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return db
+}
 
 type DBObject struct {
 	Id                 int            `db:"id"`
