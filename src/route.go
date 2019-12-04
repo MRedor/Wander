@@ -79,3 +79,19 @@ func routeByObjects(objects []Object) (*Route, error) {
 	result.Name = NameByRoute(result)
 	return result, nil
 }
+
+func routeById(id int64) (*Route, error) {
+	dbroute, err := DBRouteById(id)
+	if err != nil {
+		return nil, err
+	}
+	return dbroute.Route(), nil
+}
+
+func getDirectRoute(a, b Point) *Route {
+	return &Route{}
+}
+
+func getRoundRoute(start Point, radius int) *Route {
+	return &Route{}
+}

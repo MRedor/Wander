@@ -33,26 +33,12 @@ func (p Object) positionString() string {
 	return fmt.Sprintf("%f,%f", p.Position.Lat, p.Position.Lon)
 }
 
-func ObjectByDBObject(o *DBObject) *Object {
-	return &Object{
-		Id:          o.Id,
-		Name:        o.Name.String,
-		Position:    Point{o.Lat, o.Lon},
-		Image:       o.Image.String,
-		Type:        o.Type,
-		Address:     o.Address.String,
-		Url:         o.Url.String,
-		Prices:      o.Prices.String,
-		Description: o.Description.String,
-	}
-}
-
 func ObjectById(id int64) (*Object, error) {
 	o, err := DBObjectById(id)
 	if err != nil {
 		return nil, err
 	}
-	return ObjectByDBObject(o), nil
+	return o.Object(), nil
 }
 
 // RandomObjectsInRange gets a slice of random objects from the given range.
@@ -60,7 +46,7 @@ func RandomObjectsInRange(a, b Point, count int64) []Object {
 	objectsDB := getDBObjectsInRange(a, b)
 	var objects []Object
 	for _, o := range objectsDB {
-		objects = append(objects, *ObjectByDBObject(&o))
+		objects = append(objects, *((&o).Object()))
 	}
 
 	rand.Shuffle(

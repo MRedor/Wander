@@ -31,6 +31,20 @@ type DBObject struct {
 	ActiveOnlyAtNight  sql.NullInt64  `db:"active_only_at_night"`
 }
 
+func (o* DBObject) Object() *Object {
+	return &Object{
+		Id:          o.Id,
+		Name:        o.Name.String,
+		Position:    Point{o.Lat, o.Lon},
+		Image:       o.Image.String,
+		Type:        o.Type,
+		Address:     o.Address.String,
+		Url:         o.Url.String,
+		Prices:      o.Prices.String,
+		Description: o.Description.String,
+	}
+}
+
 // DBObjectById gets object from database.
 func DBObjectById(id int64) (*DBObject, error) {
 	var point = DBObject{}
@@ -93,8 +107,8 @@ func insertRoute(route Route) {
 	)
 }
 
-func getRoundRoute(start Point, radius int) *Route {
-	return &Route{}
+func getRoundDBRoute(start Point, radius int) *DBRoute {
+	return &DBRoute{}
 }
 
 func existRoundRoute(start Point, radius int) bool {
@@ -114,8 +128,8 @@ func existRoundRoute(start Point, radius int) bool {
 	return true
 }
 
-func getDirectRoute(a, b Point) *Route {
-	return &Route{}
+func getDirectDBRoute(a, b Point) *DBRoute {
+	return &DBRoute{}
 }
 
 func existDirectRoute(a, b Point) bool {
@@ -135,6 +149,47 @@ func existDirectRoute(a, b Point) bool {
 	return true
 }
 
-func routeById(id int64) (*Route, error) {
-	return nil, nil
+func DBRouteById(id int64) (*DBRoute, error) {
+	var route = DBRoute{}
+
+	err := db.Get(&route, "select * from routes where id=?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &route, nil
+}
+
+type DBRoute struct {
+	Id                 int            `db:"id"`
+	Type string `db:"type"`
+	Start_lat float64 `db:"start_lat"`
+	Start_lon float64 `db:"start_lon"`
+	Finish_lat float64 `db:"finish_lat"`
+	Finish_lon float64 `db:"finish_lon"`
+	Radius int `db:"radius"`
+	Length float64 `db:"length"`
+	Time int `db:"time"`
+	Objects string `db:"objects"`
+	Points string `db:"points"`
+	Name string `db:"name"`
+	Count int `db:"count"`
+}
+
+func (r *DBRoute) Route() *Route {
+	route := Route{
+		Objects: []Object{},
+		Points:  []Point{},
+		Id:      r.Id,
+		Length:  r.Length,
+		Time:    r.Time,
+		Name:    r.Name,
+		type_:   r.Type,
+		radius:  r.Radius,
+	}
+
+	json.Unmarshal([]byte(r.Objects), route.Objects)
+	json.Unmarshal([]byte(r.Points), route.Points)
+
+	return &route
 }
