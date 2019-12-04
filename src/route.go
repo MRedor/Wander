@@ -67,7 +67,7 @@ func RoundRoute(start Point, radius int) (*Route, error) {
 }
 
 func routeByObjects(objects []Object) (*Route, error) {
-	result, err := getOSRM(objects).Route()
+	result, err := getOSRMByObjects(objects).Route()
 	if err != nil {
 		//ищем маршрут между парами
 	}

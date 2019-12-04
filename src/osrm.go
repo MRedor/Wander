@@ -55,12 +55,20 @@ func (osrm OSRMResponse) Route() (*Route, error) {
 	return &route, nil
 }
 
-func getOSRM(points []Object) OSRMResponse {
+func getOSRMByObjects(points []Object) OSRMResponse {
 	pointParameters := strings.Join(positionsToStrings(points), ";")
+	return getOSRM(pointParameters)
+}
 
+func getOSRMByPoints(points []Point) OSRMResponse {
+	pointParameters := strings.Join(pointsToStrings(points), ";")
+	return getOSRM(pointParameters)
+}
+
+func getOSRM(parameters string) OSRMResponse {
 	url := fmt.Sprintf(
 		"http://travelpath.ru:5000/route/v1/foot/%s?alternatives=false&steps=false&geometries=geojson",
-		pointParameters,
+		parameters,
 	)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -77,6 +85,5 @@ func getOSRM(points []Object) OSRMResponse {
 		panic(err.Error())
 	}
 
-	//fmt.Println(data)
 	return data
 }

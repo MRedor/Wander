@@ -25,6 +25,10 @@ type Point struct {
 	Lon float64 `json:"lon"`
 }
 
+func (p Point) String() string {
+	return fmt.Sprintf("%f,%f", p.Lat, p.Lon)
+}
+
 func (p Point) distance(a Point) float64 {
 	return math.Sqrt(math.Pow(p.Lon-a.Lon, 2) + math.Pow(p.Lat-a.Lat, 2))
 }
@@ -64,6 +68,14 @@ func positionsToStrings(points []Object) []string {
 	var result []string
 	for _, p := range points {
 		result = append(result, p.positionString())
+	}
+	return result
+}
+
+func pointsToStrings(points []Point) []string {
+	var result []string
+	for _, p := range points {
+		result = append(result, p.String())
 	}
 	return result
 }
