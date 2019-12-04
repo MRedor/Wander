@@ -108,7 +108,17 @@ func insertRoute(route Route) {
 }
 
 func getRoundDBRoute(start Point, radius int) (*DBRoute, error) {
-	return &DBRoute{}, nil
+	var route = DBRoute{}
+	query := fmt.Sprintf(
+		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
+		start.Lat, start.Lon, radius)
+
+	err := db.Get(&route, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return &route, nil
 }
 
 func existRoundRoute(start Point, radius int) bool {
@@ -129,7 +139,17 @@ func existRoundRoute(start Point, radius int) bool {
 }
 
 func getDirectDBRoute(a, b Point) (*DBRoute, error) {
-	return &DBRoute{}, nil
+	var route = DBRoute{}
+	query := fmt.Sprintf(
+		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
+		a.Lat, a.Lon, b.Lat, b.Lon)
+
+	err := db.Get(&route, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return &route, nil
 }
 
 func existDirectRoute(a, b Point) bool {
