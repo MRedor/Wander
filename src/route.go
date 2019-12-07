@@ -5,6 +5,13 @@ import (
 	"sort"
 )
 
+type RouteType string
+
+const (
+	Direct RouteType = "direct"
+	Round  RouteType = "round"
+)
+
 type Route struct {
 	Objects []Object `json:"objects"`
 	Points  []Point  `json:"points"`
@@ -31,8 +38,7 @@ func ABRoute(a, b Point) (*Route, error) {
 		return a.distance(objects[i].Position) < a.distance(objects[j].Position)
 	})
 	route, err := routeByObjects(objects)
-	route.type_ = "direct"
-	route.radius = 0
+	route.type_ = string(Direct)
 	insertRoute(*route)
 	return route, err
 }
@@ -60,7 +66,7 @@ func RoundRoute(start Point, radius int) (*Route, error) {
 		return (x1*y2 - x2*y1) < 0
 	})
 	route, err := routeByObjects(objects)
-	route.type_ = "round"
+	route.type_ = string(Round)
 	route.radius = radius
 	insertRoute(*route)
 	return route, err

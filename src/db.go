@@ -49,7 +49,7 @@ func (o *DBObject) Object() *Object {
 		Id:          o.Id,
 		Name:        o.Name.String,
 		Position:    Point{o.Lat, o.Lon},
-		Image:       o.Image.String,
+		Image:       "https://travelpath.ru" + o.Image.String,
 		Type:        o.Type,
 		Address:     o.Address.String,
 		Url:         o.Url.String,
