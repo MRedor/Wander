@@ -3,4 +3,4 @@ database:
   port: "3306"
   user: "wander"
   password: "wanderpassword"
-  table: "wander"
+  database: "wander"
