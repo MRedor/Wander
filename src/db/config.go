@@ -15,7 +15,7 @@ type Config struct {
 }
 
 func readConfig() Config {
-	f, err := os.Open("config.yml")
+	f, err := os.Open("./src/config.yml")
 	defer f.Close()
 	if err != nil {
 		log.Fatal(err)
