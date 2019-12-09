@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"log"
 	"math"
+	"strings"
 )
 
 var (
@@ -14,13 +15,13 @@ var (
 )
 
 func InitDB() {
-	cfg := readConfig()
-	source := fmt.Sprintf("%s:%s@/%s",
-		cfg.Database.Username, cfg.Database.Password, cfg.Database.Table)
-	database, err := sqlx.Open("mysql", source)
+	source := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Database)
+	db, err := sqlx.Open("mysql", source)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	db = database
 }
 
@@ -96,30 +97,16 @@ func GetRoundDBRoute(start data.Point, radius int) (*DBRoute, error) {
 
 	err := db.Get(&route, query)
 	if err != nil {
+		if msg := err.Error(); strings.Contains(msg, "no rows in result") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	return &route, nil
 }
 
-func ExistRoundRoute(start data.Point, radius int) bool {
-	var cnt int
-	query := fmt.Sprintf(
-		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
-		start.Lat, start.Lon, radius)
-
-	err := db.Get(&cnt, query)
-	if err != nil {
-		return false
-	}
-	if cnt == 0 {
-		return false
-	}
-
-	return true
-}
-
-func GetDirectDBRoute(a, b data.Point) (*DBRoute, error) {
+func getDirectDBRoute(a, b Point) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
 		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
@@ -127,26 +114,12 @@ func GetDirectDBRoute(a, b data.Point) (*DBRoute, error) {
 
 	err := db.Get(&route, query)
 	if err != nil {
+		if msg := err.Error(); strings.Contains(msg, "no rows in result") {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &route, nil
-}
-
-func ExistDirectRoute(a, b data.Point) bool {
-	var cnt int
-	query := fmt.Sprintf(
-		"select count(*) from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
-		a.Lat, a.Lon, b.Lat, b.Lon)
-
-	err := db.Get(&cnt, query)
-	if err != nil {
-		return false
-	}
-	if cnt == 0 {
-		return false
-	}
-
-	return true
 }
 
 func DBRouteById(id int64) (*DBRoute, error) {
