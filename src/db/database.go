@@ -15,9 +15,11 @@ var (
 )
 
 func InitDB() {
+	cfg := readConfig()
+
 	source := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
 		cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Database)
-	db, err := sqlx.Open("mysql", source)
+	database, err := sqlx.Open("mysql", source)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -106,7 +108,7 @@ func GetRoundDBRoute(start data.Point, radius int) (*DBRoute, error) {
 	return &route, nil
 }
 
-func getDirectDBRoute(a, b Point) (*DBRoute, error) {
+func GetDirectDBRoute(a, b data.Point) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
 		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
