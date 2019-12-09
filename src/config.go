@@ -1,13 +1,15 @@
 package main
 
 import (
-	"os"
-	"log"
 	"gopkg.in/yaml.v2"
+	"log"
+	"os"
 )
 
 type Config struct {
 	Database struct {
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
 		Username string `yaml:"user"`
 		Password string `yaml:"password"`
 		Table    string `yaml:"table"`

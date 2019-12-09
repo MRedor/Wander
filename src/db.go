@@ -11,8 +11,8 @@ import (
 )
 
 func initDB() *sqlx.DB {
-	source := fmt.Sprintf("%s:%s@/%s",
-		cfg.Database.Username, cfg.Database.Password, cfg.Database.Table)
+	source := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Table)
 	db, err := sqlx.Open("mysql", source)
 	if err != nil {
 		log.Fatal(err)
