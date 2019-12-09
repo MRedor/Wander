@@ -1,20 +1,15 @@
 package main
 
 import (
+	"controllers"
+	"db"
 	_ "github.com/go-sql-driver/mysql"
-	sqlx "github.com/jmoiron/sqlx"
-)
-
-var (
-	db  *sqlx.DB
-	cfg Config
 )
 
 func main() {
-	startServer()
+	controllers.StartServer()
 }
 
 func init() {
-	readConfig()
-	db = initDB()
+	db.InitDB()
 }

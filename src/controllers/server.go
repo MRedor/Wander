@@ -1,8 +1,8 @@
-package main
+package controllers
 
 import "github.com/labstack/echo"
 
-func startServer() {
+func StartServer() {
 	e := echo.New()
 
 	e.GET("/api/objects/:id", getObjectById)

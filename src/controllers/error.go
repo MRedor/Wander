@@ -1,4 +1,4 @@
-package main
+package controllers
 
 type Error struct {
 	Code    int    `json:"code"`

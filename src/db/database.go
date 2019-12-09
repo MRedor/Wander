@@ -1,61 +1,27 @@
-package main
+package db
 
 import (
-	"database/sql"
+	"data"
 	"encoding/json"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"math"
-
-	sqlx "github.com/jmoiron/sqlx"
 )
 
-func initDB() *sqlx.DB {
+var (
+	db *sqlx.DB
+)
+
+func InitDB() {
+	cfg := readConfig()
 	source := fmt.Sprintf("%s:%s@/%s",
 		cfg.Database.Username, cfg.Database.Password, cfg.Database.Table)
-	db, err := sqlx.Open("mysql", source)
+	database, err := sqlx.Open("mysql", source)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	return db
-}
-
-type DBObject struct {
-	Id                 int            `db:"id"`
-	Lat                float64        `db:"lat"`
-	Lon                float64        `db:"lon"`
-	Type               string         `db:"type"`
-	Name               sql.NullString `db:"name"`
-	Description        sql.NullString `db:"description"`
-	Time               sql.NullString `db:"time"`
-	NameEnglish        sql.NullString `db:"name_en"`
-	DescriptionEnglish sql.NullString `db:"description_en"`
-	Image              sql.NullString `db:"img"`
-	IdInGraph          int            `db:"id_point_in_graph"`
-	Updated            string         `db:"updated"`
-	Active             bool           `db:"active"`
-	Address            sql.NullString `db:"address"`
-	Prices             sql.NullString `db:"prices"`
-	Url                sql.NullString `db:"url"`
-	NightDescription   sql.NullString `db:"night_description"`
-	NightImage         sql.NullString `db:"night_photo"`
-	NightType          sql.NullString `db:"night_type"`
-	ActiveOnlyAtNight  sql.NullInt64  `db:"active_only_at_night"`
-}
-
-func (o *DBObject) Object() *Object {
-	return &Object{
-		Id:          o.Id,
-		Name:        o.Name.String,
-		Position:    Point{o.Lat, o.Lon},
-		Image:       "https://travelpath.ru" + o.Image.String,
-		Type:        o.Type,
-		Address:     o.Address.String,
-		Url:         o.Url.String,
-		Prices:      o.Prices.String,
-		Description: o.Description.String,
-	}
+	db = database
 }
 
 // DBObjectById gets object from database.
@@ -70,7 +36,7 @@ func DBObjectById(id int64) (*DBObject, error) {
 	return &point, nil
 }
 
-func getDBObjectsInRange(a, b Point) []DBObject {
+func GetDBObjectsInRange(a, b data.Point) []DBObject {
 	maxLat := math.Max(a.Lat, b.Lat)
 	minLat := math.Min(a.Lat, b.Lat)
 	maxLon := math.Max(a.Lon, b.Lon)
@@ -90,7 +56,7 @@ func getDBObjectsInRange(a, b Point) []DBObject {
 	return result
 }
 
-func freeIdInRoutes() (int, error) {
+func FreeIdInRoutes() (int, error) {
 	var id int
 
 	err := db.Get(&id, "select count(*) from routes")
@@ -101,18 +67,20 @@ func freeIdInRoutes() (int, error) {
 	return id + 1, nil
 }
 
-func insertRoute(route Route) {
+func InsertRoute(route data.Route) {
 	objectsJSON, _ := json.Marshal(route.Objects)
 	pointsJSON, _ := json.Marshal(route.Points)
 
 	db.MustExec(
-		"insert into routes (id, type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-		route.Id,
-		route.type_,
-		route.Points[0].Lat, route.Points[0].Lon,
-		route.Points[len(route.Points)].Lat, route.Points[len(route.Points)].Lon,
-		route.radius,
-		route.Length, route.Time,
+		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count) VALUES ((?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?))",
+		route.Type,
+		route.Points[0].Lat,
+		route.Points[0].Lon,
+		route.Points[len(route.Points)-1].Lat,
+		route.Points[len(route.Points)-1].Lon,
+		route.Radius,
+		route.Length,
+		route.Time,
 		objectsJSON,
 		pointsJSON,
 		route.Name,
@@ -120,7 +88,7 @@ func insertRoute(route Route) {
 	)
 }
 
-func getRoundDBRoute(start Point, radius int) (*DBRoute, error) {
+func GetRoundDBRoute(start data.Point, radius int) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
 		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
@@ -134,7 +102,7 @@ func getRoundDBRoute(start Point, radius int) (*DBRoute, error) {
 	return &route, nil
 }
 
-func existRoundRoute(start Point, radius int) bool {
+func ExistRoundRoute(start data.Point, radius int) bool {
 	var cnt int
 	query := fmt.Sprintf(
 		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
@@ -151,7 +119,7 @@ func existRoundRoute(start Point, radius int) bool {
 	return true
 }
 
-func getDirectDBRoute(a, b Point) (*DBRoute, error) {
+func GetDirectDBRoute(a, b data.Point) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
 		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
@@ -164,7 +132,7 @@ func getDirectDBRoute(a, b Point) (*DBRoute, error) {
 	return &route, nil
 }
 
-func existDirectRoute(a, b Point) bool {
+func ExistDirectRoute(a, b data.Point) bool {
 	var cnt int
 	query := fmt.Sprintf(
 		"select count(*) from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
@@ -208,16 +176,16 @@ type DBRoute struct {
 	Count      int     `db:"count"`
 }
 
-func (r *DBRoute) Route() *Route {
-	route := Route{
-		Objects: []Object{},
-		Points:  []Point{},
+func (r *DBRoute) Route() *data.Route {
+	route := data.Route{
+		Objects: []data.Object{},
+		Points:  []data.Point{},
 		Id:      r.Id,
 		Length:  r.Length,
 		Time:    r.Time,
 		Name:    r.Name,
-		type_:   r.Type,
-		radius:  r.Radius,
+		Type:    r.Type,
+		Radius:  r.Radius,
 	}
 
 	json.Unmarshal([]byte(r.Objects), route.Objects)

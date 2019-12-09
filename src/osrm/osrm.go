@@ -1,6 +1,7 @@
-package main
+package osrm
 
 import (
+	"data"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,16 +9,17 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"objects"
 	"strings"
 )
 
-type OSRMGeometry struct {
+type Geometry struct {
 	Coordinates [][2]float64
 	Type        string
 }
 
-type OSRMRoute struct {
-	Geometry OSRMGeometry
+type Route struct {
+	Geometry Geometry
 	Legs     []struct {
 		Summary  string
 		Duration float64
@@ -28,9 +30,9 @@ type OSRMRoute struct {
 	Distance float64
 }
 
-type OSRMResponse struct {
+type Response struct {
 	Code   string
-	Routes []OSRMRoute
+	Routes []Route
 	// не используем
 	WayPoints []struct {
 		Hint     string
@@ -39,33 +41,33 @@ type OSRMResponse struct {
 	}
 }
 
-func (osrm OSRMResponse) Route() (*Route, error) {
+func (osrm Response) Route() (*data.Route, error) {
 	if osrm.Code != "Ok" {
 		return nil, errors.New("bad OSRM")
 	}
 	osrmRoute := osrm.Routes[0]
-	route := Route{
-		Points: []Point{},
+	route := data.Route{
+		Points: []data.Point{},
 		Length: osrmRoute.Distance,
 		Time:   int(math.Round(osrmRoute.Duration)),
 	}
 	for _, g := range osrmRoute.Geometry.Coordinates {
-		route.Points = append(route.Points, Point{g[0], g[1]})
+		route.Points = append(route.Points, data.Point{g[0], g[1]})
 	}
 	return &route, nil
 }
 
-func getOSRMByObjects(points []Object) OSRMResponse {
-	pointParameters := strings.Join(positionsToStrings(points), ";")
+func GetOSRMByObjects(points []data.Object) Response {
+	pointParameters := strings.Join(objects.PositionsToStrings(points), ";")
 	return getOSRM(pointParameters)
 }
 
-func getOSRMByPoints(points []Point) OSRMResponse {
-	pointParameters := strings.Join(pointsToStrings(points), ";")
+func GetOSRMByPoints(points []data.Point) Response {
+	pointParameters := strings.Join(objects.PointsToStrings(points), ";")
 	return getOSRM(pointParameters)
 }
 
-func getOSRM(parameters string) OSRMResponse {
+func getOSRM(parameters string) Response {
 	url := fmt.Sprintf(
 		"http://travelpath.ru:5000/route/v1/foot/%s?alternatives=false&steps=false&geometries=geojson",
 		parameters,
@@ -79,11 +81,11 @@ func getOSRM(parameters string) OSRMResponse {
 	if err != nil {
 		panic(err.Error())
 	}
-	var data OSRMResponse
-	err = json.Unmarshal(body, &data)
+	var res Response
+	err = json.Unmarshal(body, &res)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return data
+	return res
 }

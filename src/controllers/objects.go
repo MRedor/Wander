@@ -1,11 +1,12 @@
-package main
+package controllers
 
 import (
-	"encoding/json"
+	"data"
 	"errors"
 	"github.com/labstack/echo"
 	"log"
 	"net/http"
+	"objects"
 	"strconv"
 	"strings"
 )
@@ -16,7 +17,7 @@ func getObjectById(c echo.Context) error {
 		log.Println(err)
 		return c.JSON(http.StatusBadRequest, CreateError(0, "id should be an integer"))
 	}
-	o, err := ObjectById(id)
+	o, err := objects.ObjectById(id)
 	if err != nil {
 		log.Println(err)
 		return c.JSON(http.StatusBadRequest, CreateError(0, "no object with given id"))
@@ -24,7 +25,7 @@ func getObjectById(c echo.Context) error {
 	return c.JSON(http.StatusOK, *o)
 }
 
-func parseBoundingBox(box string) (*Point, *Point, error) {
+func parseBoundingBox(box string) (*data.Point, *data.Point, error) {
 	points := strings.Split(box, ";")
 	if len(points) != 2 {
 		return nil, nil, errors.New("two points should be passed")
@@ -56,7 +57,7 @@ func parseBoundingBox(box string) (*Point, *Point, error) {
 		return nil, nil, errors.New("point should have two float coordinates")
 	}
 
-	return &Point{Lat: latA, Lon: lonA}, &Point{Lat: latB, Lon: lonB}, nil
+	return &data.Point{Lat: latA, Lon: lonA}, &data.Point{Lat: latB, Lon: lonB}, nil
 }
 
 func getRandomObjects(c echo.Context) error {
@@ -76,64 +77,5 @@ func getRandomObjects(c echo.Context) error {
 		log.Println(err)
 		return c.JSON(http.StatusBadRequest, CreateError(0, "count should be an integer"))
 	}
-	return c.JSON(http.StatusOK, RandomObjectsInRange(*a, *b, count))
-}
-
-func getRoute(c echo.Context) error {
-	req := RouteRequest{}
-	err := json.NewDecoder(c.Request().Body).Decode(&req)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, CreateError(0, "wrong request format"))
-	}
-
-	var route *Route
-	if req.Type == string(Direct) {
-		route, err = ABRoute(req.Points[0], req.Points[1])
-	}
-	if req.Type == string(Round) {
-		route, err = RoundRoute(req.Points[0], req.Radius)
-	}
-	if route == nil {
-		return c.JSON(http.StatusBadRequest, CreateError(0, "unsupported route type"))
-	}
-
-
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, CreateError(0, ""))
-	}
-	return c.JSON(http.StatusOK, *route)
-}
-
-func getRouteById(c echo.Context) error {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		log.Println(err)
-		return c.JSON(http.StatusBadRequest, CreateError(0, "id should be an integer"))
-	}
-	route, err := routeById(id)
-	if err != nil {
-		log.Println(err)
-		return c.JSON(http.StatusBadRequest, CreateError(0, "no route with given id"))
-	}
-	return c.JSON(http.StatusOK, *route)
-}
-
-func removePoint(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
-}
-
-func getListById(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, c.Param("id"))
-}
-
-func getLists(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
-}
-
-func saveFeedback(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
+	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count))
 }
