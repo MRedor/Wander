@@ -30,22 +30,24 @@ func NameByRoute(route *Route) string {
 }
 
 func ABRoute(a, b Point) (*Route, error) {
-	if existDirectRoute(a, b) {
-		return getDirectRoute(a, b)
+	route, err := getDirectRoute(a, b)
+	if route != nil || err != nil {
+		return route, err
 	}
 	objects := RandomObjectsInRange(a, b, 10)
 	sort.Slice(objects, func(i, j int) bool {
 		return a.distance(objects[i].Position) < a.distance(objects[j].Position)
 	})
-	route, err := routeByObjects(objects)
+	route, err = routeByObjects(objects)
 	route.type_ = string(Direct)
 	insertRoute(*route)
 	return route, err
 }
 
 func RoundRoute(start Point, radius int) (*Route, error) {
-	if existRoundRoute(start, radius) {
-		return getRoundRoute(start, radius)
+	route, err := getRoundRoute(start, radius)
+	if route != nil || err != nil {
+		return route, err
 	}
 	a := Point{
 		Lat: start.Lat - float64(radius),
@@ -65,7 +67,7 @@ func RoundRoute(start Point, radius int) (*Route, error) {
 		y2 := objects[j].Position.Lon - start.Lon
 		return (x1*y2 - x2*y1) < 0
 	})
-	route, err := routeByObjects(objects)
+	route, err = routeByObjects(objects)
 	route.type_ = string(Round)
 	route.radius = radius
 	insertRoute(*route)

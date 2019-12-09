@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 
 	sqlx "github.com/jmoiron/sqlx"
 )
@@ -128,27 +129,13 @@ func getRoundDBRoute(start Point, radius int) (*DBRoute, error) {
 
 	err := db.Get(&route, query)
 	if err != nil {
+		if msg := err.Error(); strings.Contains(msg, "no rows in result") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	return &route, nil
-}
-
-func existRoundRoute(start Point, radius int) bool {
-	var cnt int
-	query := fmt.Sprintf(
-		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
-		start.Lat, start.Lon, radius)
-
-	err := db.Get(&cnt, query)
-	if err != nil {
-		return false
-	}
-	if cnt == 0 {
-		return false
-	}
-
-	return true
 }
 
 func getDirectDBRoute(a, b Point) (*DBRoute, error) {
@@ -159,26 +146,12 @@ func getDirectDBRoute(a, b Point) (*DBRoute, error) {
 
 	err := db.Get(&route, query)
 	if err != nil {
+		if msg := err.Error(); strings.Contains(msg, "no rows in result") {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &route, nil
-}
-
-func existDirectRoute(a, b Point) bool {
-	var cnt int
-	query := fmt.Sprintf(
-		"select count(*) from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
-		a.Lat, a.Lon, b.Lat, b.Lon)
-
-	err := db.Get(&cnt, query)
-	if err != nil {
-		return false
-	}
-	if cnt == 0 {
-		return false
-	}
-
-	return true
 }
 
 func DBRouteById(id int64) (*DBRoute, error) {
