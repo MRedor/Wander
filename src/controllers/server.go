@@ -1,9 +1,13 @@
 package controllers
 
-import "github.com/labstack/echo"
+import (
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+)
 
 func StartServer() {
 	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
 
 	e.GET("/api/objects/:id", getObjectById)
 	e.GET("/api/objects/getFeatured/:boundingBox", getRandomObjects)

@@ -17,7 +17,7 @@ type Object struct {
 	Address string `json:"address"`
 	Url     string `json:"link"`
 	Prices  string `json:"price"`
-	//workingTime
+	WorkingTime string `json:"workingTime"`
 	Description string `json:"description"`
 }
 
@@ -78,6 +78,7 @@ func ObjectByDBObject(o *db.DBObject) *Object {
 		Address:     o.Address.String,
 		Url:         o.Url.String,
 		Prices:      o.Prices.String,
+		WorkingTime: o.Time.String,
 		Description: o.Description.String,
 	}
 }
