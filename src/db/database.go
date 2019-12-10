@@ -61,7 +61,7 @@ func GetDBObjectsInRange(a, b points.Point) []DBObject {
 func GetRoundDBRoute(start points.Point, radius int) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
-		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
+		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f) limit 1",
 		start.Lat, start.Lon, radius)
 	err := db.Get(&route, query)
 	if err != nil {
@@ -82,7 +82,7 @@ func GetRoundDBRoute(start points.Point, radius int) (*DBRoute, error) {
 func GetDirectDBRoute(a, b points.Point) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
-		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
+		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f) limit 1",
 		a.Lat, a.Lon, b.Lat, b.Lon)
 
 	err := db.Get(&route, query)
