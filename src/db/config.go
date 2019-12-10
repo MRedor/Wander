@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"gopkg.in/yaml.v2"
@@ -16,16 +16,18 @@ type Config struct {
 	} `yaml:"database"`
 }
 
-func readConfig() {
-	f, err := os.Open("config.yml")
+func readConfig() Config {
+	f, err := os.Open("./src/config.yml")
 	defer f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	cfg := Config{}
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return cfg
 }
