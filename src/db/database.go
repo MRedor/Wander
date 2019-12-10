@@ -1,11 +1,11 @@
 package db
 
 import (
-	"points"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"math"
+	"points"
 	"strings"
 )
 
@@ -112,26 +112,30 @@ func DBRouteById(id int64) (*DBRoute, error) {
 	return &route, nil
 }
 
-//func InsertRoute(route points.Route) {
-//	objectsJSON, _ := json.Marshal(route.Objects)
-//	pointsJSON, _ := json.Marshal(route.Points)
-//
+func InsertDirectRoute(route DBRoute) int64 {
+	query := fmt.Sprintf(
+		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, length, time, objects, points, name) values (%s, %f, %f, %f, %f, %f, %v, %s, %s, %s)",
+		route.Type,
+		route.Start_lat, route.Start_lon, route.Finish_lat, route.Finish_lon,
+		route.Length, route.Time,
+		route.Objects, route.Points, route.Name,
+		)
 
-//	res, err := db.Exec(
-//		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count) VALUES ((?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?))",
-//		route.Type,
-//		route.Points[0].Lat,
-//		route.Points[0].Lon,
-//		route.Points[len(route.Points)-1].Lat,
-//		route.Points[len(route.Points)-1].Lon,
-//		route.Radius,
-//		route.Length,
-//		route.Time,
-//		objectsJSON,
-//		pointsJSON,
-//		route.Name,
-//		1, // count
-//	)
-//  id, err := res.LastInsertId()
-//}
+	res, _ := db.Exec(query)
+	id, _ := res.LastInsertId()
+	return id
+}
 
+func InsertRoundRoute(route DBRoute) int64 {
+	query := fmt.Sprintf(
+		"insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name) values (%s, %f, %f, %f, %f, %f, %v, %s, %s, %s)",
+		route.Type,
+		route.Start_lat, route.Start_lon, route.Radius,
+		route.Length, route.Time,
+		route.Objects, route.Points, route.Name,
+	)
+
+	res, _ := db.Exec(query)
+	id, _ := res.LastInsertId()
+	return id
+}

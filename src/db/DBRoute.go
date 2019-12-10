@@ -1,7 +1,7 @@
 package db
 
 type DBRoute struct {
-	Id         int     `db:"id"`
+	Id         int64     `db:"id"`
 	Type       string  `db:"type"`
 	Start_lat  float64 `db:"start_lat"`
 	Start_lon  float64 `db:"start_lon"`

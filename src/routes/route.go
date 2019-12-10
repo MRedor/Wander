@@ -22,7 +22,7 @@ const (
 type Route struct {
 	Objects []objects.Object `json:"objects"`
 	Points  []points.Point   `json:"points"`
-	Id      int              `json:"id"`
+	Id      int64            `json:"id"`
 	Length  float64          `json:"length"` //meters
 	Time    int              `json:"time"`   //seconds
 	Name    string           `json:"name"`
@@ -65,7 +65,7 @@ func ABRoute(a, b points.Point) (*Route, error) {
 	})
 	route, err = RouteByObjects(randomObjects)
 	route.Type = string(Direct)
-	route.Id = InsertRoute(route)
+	route.Id = saveInDB(route)
 	return route, err
 }
 
@@ -95,16 +95,37 @@ func RoundRoute(start points.Point, radius int) (*Route, error) {
 	route, err = RouteByObjects(objects)
 	route.Type = string(Round)
 	route.Radius = radius
-	route.Id = InsertRoute(route)
+	route.Id = saveInDB(route)
 	return route, err
 }
 
-func InsertRoute(route *Route) int {
-	return 0
+func saveInDB(route *Route) int64 {
+	dbroute := db.DBRoute{
+		Start_lat:  route.Points[0].Lat,
+		Start_lon:  route.Points[0].Lon,
+		Finish_lat: route.Points[len(route.Points)-1].Lat,
+		Finish_lon: route.Points[len(route.Points)-1].Lon,
+		Length:     route.Length,
+		Time:       route.Time,
+		Name:       route.Name,
+	}
+	objectsJSON, _ := json.Marshal(route.Objects)
+	dbroute.Objects = string(objectsJSON)
+	pointsJSON, _ := json.Marshal(route.Points)
+	dbroute.Points = string(pointsJSON)
+
+	if route.Type == string(Direct) {
+		dbroute.Type = string(Direct)
+		return db.InsertDirectRoute(dbroute)
+	} else {
+		dbroute.Type = string(Round)
+		dbroute.Radius = route.Radius
+		return db.InsertRoundRoute(dbroute)
+	}
 }
 
 func RouteByObjects(objects []objects.Object) (*Route, error) {
-	result, err := RouteByOSRMResponce(osrm.GetOSRMByObjects(objects))
+	result, err := routeByOSRMResponce(osrm.GetOSRMByObjects(objects))
 	if err != nil {
 		//ищем маршрут между парами
 	}
@@ -141,7 +162,7 @@ func getRoundRoute(start points.Point, radius int) (*Route, error) {
 	return RouteByDBRoute(dbroute), nil
 }
 
-func RouteByOSRMResponce(resp osrm.Response) (*Route, error) {
+func routeByOSRMResponce(resp osrm.Response) (*Route, error) {
 	if resp.Code != "Ok" {
 		return nil, errors.New("bad OSRM")
 	}

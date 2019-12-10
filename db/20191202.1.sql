@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS  `routes` (
     `objects` text,
     `points` text,
     `name` text,
-    `count` int(11) NOT NULL,
+    `count` int(11) NOT NULL DEFAULT 1,
     `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
