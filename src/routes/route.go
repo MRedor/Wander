@@ -177,3 +177,39 @@ func routeByOSRMResponce(resp osrm.Response) (*Route, error) {
 	}
 	return &route, nil
 }
+
+func RemovePoint(routeId, objectId int64) (*Route, error) {
+	route, err := RouteById(routeId)
+	if err != nil {
+		return nil, err
+	}
+	idInSlice := -1
+	for i := 0; i < len(route.Objects); i++ {
+		if route.Objects[i].Id == objectId {
+			idInSlice = i
+			break
+		}
+	}
+	if idInSlice == -1 {
+		return nil, errors.New("no object with given id in the route")
+	}
+	route.Objects = append(route.Objects[:idInSlice], route.Objects[idInSlice+1:]...) //удаляем
+
+	routeType := route.Type
+	radius := -1
+	if routeType == string(Round) {
+		radius = route.Radius
+	}
+
+	route, err = RouteByObjects(route.Objects)
+	if err != nil {
+		return nil, err
+	}
+	route.Type = routeType
+	if routeType == string(Round) {
+		route.Radius = radius
+	}
+	route.Id = saveInDB(route)
+
+	return route, err
+}

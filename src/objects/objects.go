@@ -8,7 +8,7 @@ import (
 )
 
 type Object struct {
-	Id       int          `json:"id"`
+	Id       int64        `json:"id"`
 	Name     string       `json:"title"`
 	Position points.Point `json:"position"`
 	Image    string       `json:"image"`

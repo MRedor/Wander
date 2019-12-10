@@ -48,6 +48,14 @@ func getRouteById(c echo.Context) error {
 }
 
 func removePoint(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
+	req := RemovePointRequest{}
+	err := json.NewDecoder(c.Request().Body).Decode(&req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, CreateError(0, "wrong request format"))
+	}
+	route, err := routes.RemovePoint(1, 2)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, CreateError(0, err.Error()))
+	}
+	return c.JSON(http.StatusOK, *route)
 }

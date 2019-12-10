@@ -9,3 +9,8 @@ type RouteRequest struct {
 	Radius int            `json:"radius"`
 	Type   string         `json:"type"`
 }
+
+type RemovePointRequest struct {
+	ObjectId int
+	RouteId  int
+}

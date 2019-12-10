@@ -5,7 +5,7 @@ import (
 )
 
 type DBObject struct {
-	Id                 int            `db:"id"`
+	Id                 int64          `db:"id"`
 	Lat                float64        `db:"lat"`
 	Lon                float64        `db:"lon"`
 	Type               string         `db:"type"`
