@@ -68,10 +68,6 @@ func getRandomObjects(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, CreateError(0, err.Error()))
 	}
 
-	if c.QueryParam("count") == "" {
-		return c.JSON(http.StatusBadRequest, CreateError(0, "count was not provided"))
-	}
-
 	count, err := strconv.ParseInt(c.QueryParam("count"), 10, 64)
 	if err != nil {
 		log.Println(err)
