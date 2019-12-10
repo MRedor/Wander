@@ -1,9 +1,12 @@
 package routes
 
 import (
-	"data"
+	"points"
 	"db"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"math"
 	"objects"
 	"osrm"
 	"sort"
@@ -16,13 +19,42 @@ const (
 	Round  RouteType = "round"
 )
 
-func NameByRoute(route *data.Route) string {
+type Route struct {
+	Objects []objects.Object `json:"objects"`
+	Points  []points.Point   `json:"points"`
+	Id      int              `json:"id"`
+	Length  float64          `json:"length"` //meters
+	Time    int              `json:"time"`   //seconds
+	Name    string           `json:"name"`
+	Type    string
+	Radius  int
+}
+
+func RouteByDBRoute(r *db.DBRoute) *Route {
+	route := Route{
+		Objects: []objects.Object{},
+		Points:  []points.Point{},
+		Id:      r.Id,
+		Length:  r.Length,
+		Time:    r.Time,
+		Name:    r.Name,
+		Type:    r.Type,
+		Radius:  r.Radius,
+	}
+
+	json.Unmarshal([]byte(r.Objects), route.Objects)
+	json.Unmarshal([]byte(r.Points), route.Points)
+
+	return &route
+}
+
+func NameByRoute(route *Route) string {
 	// хотим генерить что-то умное и триггерное
 	// а пока по номеру
 	return fmt.Sprintf("Route %v", route.Id)
 }
 
-func ABRoute(a, b data.Point) (*data.Route, error) {
+func ABRoute(a, b points.Point) (*Route, error) {
 	route, err := getDirectRoute(a, b)
 	if route != nil || err != nil {
 		return route, err
@@ -33,20 +65,20 @@ func ABRoute(a, b data.Point) (*data.Route, error) {
 	})
 	route, err = RouteByObjects(randomObjects)
 	route.Type = string(Direct)
-	db.InsertRoute(*route)
+	InsertRoute(route)
 	return route, err
 }
 
-func RoundRoute(start data.Point, radius int) (*data.Route, error) {
+func RoundRoute(start points.Point, radius int) (*Route, error) {
 	route, err := getRoundRoute(start, radius)
 	if route != nil || err != nil {
 		return route, err
 	}
-	a := data.Point{
+	a := points.Point{
 		Lat: start.Lat - float64(radius),
 		Lon: start.Lon - float64(radius),
 	}
-	b := data.Point{
+	b := points.Point{
 		Lat: start.Lat + float64(radius),
 		Lon: start.Lon + float64(radius),
 	}
@@ -63,12 +95,16 @@ func RoundRoute(start data.Point, radius int) (*data.Route, error) {
 	route, err = RouteByObjects(objects)
 	route.Type = string(Round)
 	route.Radius = radius
-	db.InsertRoute(*route)
+	InsertRoute(route)
 	return route, err
 }
 
-func RouteByObjects(objects []data.Object) (*data.Route, error) {
-	result, err := osrm.GetOSRMByObjects(objects).Route()
+func InsertRoute(route *Route) {
+
+}
+
+func RouteByObjects(objects []objects.Object) (*Route, error) {
+	result, err := RouteByOSRMResponce(osrm.GetOSRMByObjects(objects))
 	if err != nil {
 		//ищем маршрут между парами
 	}
@@ -81,26 +117,42 @@ func RouteByObjects(objects []data.Object) (*data.Route, error) {
 	return result, nil
 }
 
-func RouteById(id int64) (*data.Route, error) {
+func RouteById(id int64) (*Route, error) {
 	dbroute, err := db.DBRouteById(id)
 	if err != nil {
 		return nil, err
 	}
-	return dbroute.Route(), nil
+	return RouteByDBRoute(dbroute), nil
 }
 
-func getDirectRoute(a, b data.Point) (*data.Route, error) {
+func getDirectRoute(a, b points.Point) (*Route, error) {
 	dbroute, err := db.GetDirectDBRoute(a, b)
 	if err != nil {
 		return nil, err
 	}
-	return dbroute.Route(), nil
+	return RouteByDBRoute(dbroute), nil
 }
 
-func getRoundRoute(start data.Point, radius int) (*data.Route, error) {
+func getRoundRoute(start points.Point, radius int) (*Route, error) {
 	dbroute, err := db.GetRoundDBRoute(start, radius)
 	if err != nil {
 		return nil, err
 	}
-	return dbroute.Route(), nil
+	return RouteByDBRoute(dbroute), nil
+}
+
+func RouteByOSRMResponce(resp osrm.Response) (*Route, error) {
+	if resp.Code != "Ok" {
+		return nil, errors.New("bad OSRM")
+	}
+	osrmRoute := resp.Routes[0]
+	route := Route{
+		Points: []points.Point{},
+		Length: osrmRoute.Distance,
+		Time:   int(math.Round(osrmRoute.Duration)),
+	}
+	for _, g := range osrmRoute.Geometry.Coordinates {
+		route.Points = append(route.Points, points.Point{g[0], g[1]})
+	}
+	return &route, nil
 }

@@ -1,8 +1,7 @@
 package db
 
 import (
-	"data"
-	"encoding/json"
+	"points"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
@@ -39,7 +38,7 @@ func DBObjectById(id int64) (*DBObject, error) {
 	return &point, nil
 }
 
-func GetDBObjectsInRange(a, b data.Point) []DBObject {
+func GetDBObjectsInRange(a, b points.Point) []DBObject {
 	maxLat := math.Max(a.Lat, b.Lat)
 	minLat := math.Min(a.Lat, b.Lat)
 	maxLon := math.Max(a.Lon, b.Lon)
@@ -70,28 +69,7 @@ func FreeIdInRoutes() (int, error) {
 	return id + 1, nil
 }
 
-func InsertRoute(route data.Route) {
-	objectsJSON, _ := json.Marshal(route.Objects)
-	pointsJSON, _ := json.Marshal(route.Points)
-
-	db.MustExec(
-		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count) VALUES ((?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?))",
-		route.Type,
-		route.Points[0].Lat,
-		route.Points[0].Lon,
-		route.Points[len(route.Points)-1].Lat,
-		route.Points[len(route.Points)-1].Lon,
-		route.Radius,
-		route.Length,
-		route.Time,
-		objectsJSON,
-		pointsJSON,
-		route.Name,
-		1, // count
-	)
-}
-
-func GetRoundDBRoute(start data.Point, radius int) (*DBRoute, error) {
+func GetRoundDBRoute(start points.Point, radius int) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
 		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f)",
@@ -108,7 +86,7 @@ func GetRoundDBRoute(start data.Point, radius int) (*DBRoute, error) {
 	return &route, nil
 }
 
-func GetDirectDBRoute(a, b data.Point) (*DBRoute, error) {
+func GetDirectDBRoute(a, b points.Point) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
 		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
@@ -135,36 +113,24 @@ func DBRouteById(id int64) (*DBRoute, error) {
 	return &route, nil
 }
 
-type DBRoute struct {
-	Id         int     `db:"id"`
-	Type       string  `db:"type"`
-	Start_lat  float64 `db:"start_lat"`
-	Start_lon  float64 `db:"start_lon"`
-	Finish_lat float64 `db:"finish_lat"`
-	Finish_lon float64 `db:"finish_lon"`
-	Radius     int     `db:"radius"`
-	Length     float64 `db:"length"`
-	Time       int     `db:"time"`
-	Objects    string  `db:"objects"`
-	Points     string  `db:"points"`
-	Name       string  `db:"name"`
-	Count      int     `db:"count"`
-}
+//func InsertRoute(route points.Route) {
+//	objectsJSON, _ := json.Marshal(route.Objects)
+//	pointsJSON, _ := json.Marshal(route.Points)
+//
+//	db.MustExec(
+//		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count) VALUES ((?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?))",
+//		route.Type,
+//		route.Points[0].Lat,
+//		route.Points[0].Lon,
+//		route.Points[len(route.Points)-1].Lat,
+//		route.Points[len(route.Points)-1].Lon,
+//		route.Radius,
+//		route.Length,
+//		route.Time,
+//		objectsJSON,
+//		pointsJSON,
+//		route.Name,
+//		1, // count
+//	)
+//}
 
-func (r *DBRoute) Route() *data.Route {
-	route := data.Route{
-		Objects: []data.Object{},
-		Points:  []data.Point{},
-		Id:      r.Id,
-		Length:  r.Length,
-		Time:    r.Time,
-		Name:    r.Name,
-		Type:    r.Type,
-		Radius:  r.Radius,
-	}
-
-	json.Unmarshal([]byte(r.Objects), route.Objects)
-	json.Unmarshal([]byte(r.Points), route.Points)
-
-	return &route
-}

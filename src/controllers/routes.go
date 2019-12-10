@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"data"
 	"encoding/json"
 	"github.com/labstack/echo"
 	"log"
@@ -17,7 +16,7 @@ func getRoute(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, CreateError(0, "wrong request format"))
 	}
 
-	var route *data.Route
+	var route *routes.Route
 	if req.Type == string(routes.Direct) {
 		route, err = routes.ABRoute(req.Points[0], req.Points[1])
 	}

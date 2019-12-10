@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"data"
+	"points"
 	"errors"
 	"github.com/labstack/echo"
 	"log"
@@ -25,13 +25,13 @@ func getObjectById(c echo.Context) error {
 	return c.JSON(http.StatusOK, *o)
 }
 
-func parseBoundingBox(box string) (*data.Point, *data.Point, error) {
-	points := strings.Split(box, ";")
-	if len(points) != 2 {
+func parseBoundingBox(box string) (*points.Point, *points.Point, error) {
+	got := strings.Split(box, ";")
+	if len(got) != 2 {
 		return nil, nil, errors.New("two points should be passed")
 	}
 
-	a := strings.Split(points[0], ",")
+	a := strings.Split(got[0], ",")
 	if len(a) != 2 {
 		return nil, nil, errors.New("point should have two coordinates")
 	}
@@ -44,7 +44,7 @@ func parseBoundingBox(box string) (*data.Point, *data.Point, error) {
 		return nil, nil, errors.New("point should have two float coordinates")
 	}
 
-	b := strings.Split(points[1], ",")
+	b := strings.Split(got[1], ",")
 	if len(b) != 2 {
 		return nil, nil, errors.New("point should have two coordinates")
 	}
@@ -57,7 +57,7 @@ func parseBoundingBox(box string) (*data.Point, *data.Point, error) {
 		return nil, nil, errors.New("point should have two float coordinates")
 	}
 
-	return &data.Point{Lat: latA, Lon: lonA}, &data.Point{Lat: latB, Lon: lonB}, nil
+	return &points.Point{Lat: latA, Lon: lonA}, &points.Point{Lat: latB, Lon: lonB}, nil
 }
 
 func getRandomObjects(c echo.Context) error {
