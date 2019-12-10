@@ -65,7 +65,7 @@ func ABRoute(a, b points.Point) (*Route, error) {
 	})
 	route, err = RouteByObjects(randomObjects)
 	route.Type = string(Direct)
-	InsertRoute(route)
+	route.Id = InsertRoute(route)
 	return route, err
 }
 
@@ -95,12 +95,12 @@ func RoundRoute(start points.Point, radius int) (*Route, error) {
 	route, err = RouteByObjects(objects)
 	route.Type = string(Round)
 	route.Radius = radius
-	InsertRoute(route)
+	route.Id = InsertRoute(route)
 	return route, err
 }
 
-func InsertRoute(route *Route) {
-
+func InsertRoute(route *Route) int {
+	return 0
 }
 
 func RouteByObjects(objects []objects.Object) (*Route, error) {
