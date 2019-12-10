@@ -114,12 +114,13 @@ func DBRouteById(id int64) (*DBRoute, error) {
 
 func InsertDirectRoute(route DBRoute) int64 {
 	query := fmt.Sprintf(
-		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, length, time, objects, points, name) values (%s, %f, %f, %f, %f, %f, %v, %s, %s, %s)",
+		`insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, length, time, objects, points, name) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s")`,
 		route.Type,
 		route.Start_lat, route.Start_lon, route.Finish_lat, route.Finish_lon,
 		route.Length, route.Time,
 		route.Objects, route.Points, route.Name,
 		)
+	fmt.Println(query)
 
 	res, _ := db.Exec(query)
 	id, _ := res.LastInsertId()
@@ -128,7 +129,7 @@ func InsertDirectRoute(route DBRoute) int64 {
 
 func InsertRoundRoute(route DBRoute) int64 {
 	query := fmt.Sprintf(
-		"insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name) values (%s, %f, %f, %f, %f, %f, %v, %s, %s, %s)",
+		`insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s")`,
 		route.Type,
 		route.Start_lat, route.Start_lon, route.Radius,
 		route.Length, route.Time,
