@@ -109,7 +109,7 @@ func RouteByObjects(objects []objects.Object) (*Route, error) {
 		//ищем маршрут между парами
 	}
 	result.Objects = objects
-	result.Id, err = db.FreeIdInRoutes()
+	//result.Id, err = db.FreeIdInRoutes()
 	if err != nil {
 		return nil, err
 	}

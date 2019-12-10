@@ -58,17 +58,6 @@ func GetDBObjectsInRange(a, b points.Point) []DBObject {
 	return result
 }
 
-func FreeIdInRoutes() (int, error) {
-	var id int
-
-	err := db.Get(&id, "select count(*) from routes")
-	if err != nil {
-		return 0, err
-	}
-
-	return id + 1, nil
-}
-
 func GetRoundDBRoute(start points.Point, radius int) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
@@ -117,7 +106,8 @@ func DBRouteById(id int64) (*DBRoute, error) {
 //	objectsJSON, _ := json.Marshal(route.Objects)
 //	pointsJSON, _ := json.Marshal(route.Points)
 //
-//	db.MustExec(
+
+//	res, err := db.Exec(
 //		"insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count) VALUES ((?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?),(?))",
 //		route.Type,
 //		route.Points[0].Lat,
@@ -132,5 +122,6 @@ func DBRouteById(id int64) (*DBRoute, error) {
 //		route.Name,
 //		1, // count
 //	)
+//  id, err := res.LastInsertId()
 //}
 
