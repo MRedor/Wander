@@ -51,7 +51,7 @@ func RouteByDBRoute(r *db.DBRoute) *Route {
 	return &route
 }
 
-func NameByRoute(route *Route) string {
+func nameByRoute(route *Route) string {
 	// хотим генерить что-то умное и триггерное
 	// а пока по номеру
 	return fmt.Sprintf("Route %v", route.Id)
@@ -68,14 +68,14 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	})
 	routeMainPoints := append([]points.Point{a}, objects.PointsByObjects(routeObjects)...)
 	routeMainPoints = append(routeMainPoints, b)
-	route, err = RouteByPoints(routeMainPoints)
+	route, err = routeByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
 	route.Objects = routeObjects
 	route.Type = string(Direct)
 	route.Id = saveInDB(route, filters.Int())
-	route.Name = NameByRoute(route)
+	route.Name = nameByRoute(route)
 	return route, err
 }
 
@@ -104,7 +104,7 @@ func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*
 	})
 	routeMainPoints := append([]points.Point{start}, objects.PointsByObjects(routeObjects)...)
 	routeMainPoints = append(routeMainPoints, start)
-	route, err = RouteByPoints(routeMainPoints)
+	route, err = routeByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*
 	route.Type = string(Round)
 	route.radius = radius
 	route.Id = saveInDB(route, filters.Int())
-	route.Name = NameByRoute(route)
+	route.Name = nameByRoute(route)
 	return route, err
 }
 
@@ -142,17 +142,17 @@ func saveInDB(route *Route, filters int) int64 {
 	}
 }
 
-func RouteByObjects(objects []objects.Object) (*Route, error) {
+func routeByObjects(objects []objects.Object) (*Route, error) {
 	result, err := routeByOSRMResponce(osrm.GetOSRMByObjects(objects))
 	if err != nil {
 		//ищем маршрут между парами
 	}
 	result.Objects = objects
-	result.Name = NameByRoute(result)
+	result.Name = nameByRoute(result)
 	return result, nil
 }
 
-func RouteByPoints(points []points.Point) (*Route, error) {
+func routeByPoints(points []points.Point) (*Route, error) {
 	result, err := routeByOSRMResponce(osrm.GetOSRMByPoints(points))
 	if err != nil {
 		//ищем маршрут между парами
@@ -224,7 +224,7 @@ func RemovePoint(routeId, objectId int64) (*Route, error) {
 	}
 	routeFilters := route.filters
 
-	route, err = RouteByObjects(route.Objects)
+	route, err = routeByObjects(route.Objects)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +233,7 @@ func RemovePoint(routeId, objectId int64) (*Route, error) {
 		route.radius = radius
 	}
 	route.Id = saveInDB(route, routeFilters)
+
 
 	return route, err
 }
