@@ -14,4 +14,5 @@ type DBRoute struct {
 	Points     string  `db:"points"`
 	Name       string  `db:"name"`
 	Count      int     `db:"count"`
+	Filters    int     `db:"filters"`
 }

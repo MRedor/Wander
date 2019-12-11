@@ -38,7 +38,7 @@ func DBObjectById(id int64) (*DBObject, error) {
 	return &point, nil
 }
 
-func GetDBObjectsInRange(a, b points.Point) []DBObject {
+func GetDBObjectsInRange(a, b points.Point, filters int) []DBObject {
 	maxLat := math.Max(a.Lat, b.Lat)
 	minLat := math.Min(a.Lat, b.Lat)
 	maxLon := math.Max(a.Lon, b.Lon)
@@ -46,8 +46,8 @@ func GetDBObjectsInRange(a, b points.Point) []DBObject {
 
 	result := []DBObject{}
 	query := fmt.Sprintf(
-		"select * from points where (%f <= lat and lat <= %f and %f <= lon and lon <= %f)",
-		minLat, maxLat, minLon, maxLon)
+		"select * from points where (%f <= lat and lat <= %f and %f <= lon and lon <= %f and filters=%v)",
+		minLat, maxLat, minLon, maxLon, filters)
 
 	err := db.Select(&result, query)
 	if err != nil {
@@ -58,11 +58,11 @@ func GetDBObjectsInRange(a, b points.Point) []DBObject {
 	return result
 }
 
-func GetRoundDBRoute(start points.Point, radius int) (*DBRoute, error) {
+func GetRoundDBRoute(start points.Point, radius, filters int) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
-		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f) limit 1",
-		start.Lat, start.Lon, radius)
+		"select count(*) from routes where (start_lat=%f and start_lon=%f and radius=%f and filters=%v) limit 1",
+		start.Lat, start.Lon, radius, filters)
 	err := db.Get(&route, query)
 	if err != nil {
 		if msg := err.Error(); strings.Contains(msg, "no rows in result") {
@@ -79,11 +79,11 @@ func GetRoundDBRoute(start points.Point, radius int) (*DBRoute, error) {
 	return &route, nil
 }
 
-func GetDirectDBRoute(a, b points.Point) (*DBRoute, error) {
+func GetDirectDBRoute(a, b points.Point, filters int) (*DBRoute, error) {
 	var route = DBRoute{}
 	query := fmt.Sprintf(
-		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f) limit 1",
-		a.Lat, a.Lon, b.Lat, b.Lon)
+		"select * from routes where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f and filters=%v) limit 1",
+		a.Lat, a.Lon, b.Lat, b.Lon, filters)
 
 	err := db.Get(&route, query)
 	if err != nil {
@@ -114,11 +114,12 @@ func DBRouteById(id int64) (*DBRoute, error) {
 
 func InsertDirectRoute(route DBRoute) int64 {
 	query := fmt.Sprintf(
-		`insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, length, time, objects, points, name) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s")`,
+		`insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, length, time, objects, points, name, filters) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s", %v)`,
 		route.Type,
 		route.Start_lat, route.Start_lon, route.Finish_lat, route.Finish_lon,
 		route.Length, route.Time,
 		route.Objects, route.Points, route.Name,
+		route.Filters,
 		)
 	fmt.Println(query)
 
@@ -129,11 +130,12 @@ func InsertDirectRoute(route DBRoute) int64 {
 
 func InsertRoundRoute(route DBRoute) int64 {
 	query := fmt.Sprintf(
-		`insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s")`,
+		`insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name, filters) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s", %v)`,
 		route.Type,
 		route.Start_lat, route.Start_lon, route.Radius,
 		route.Length, route.Time,
 		route.Objects, route.Points, route.Name,
+		route.Filters,
 	)
 
 	res, _ := db.Exec(query)

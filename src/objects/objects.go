@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"filters"
 	"points"
 	"db"
 	"fmt"
@@ -34,8 +35,8 @@ func ObjectById(id int64) (*Object, error) {
 }
 
 // RandomObjectsInRange gets a slice of random objects from the given range.
-func RandomObjectsInRange(a, b points.Point, count int64) []Object {
-	objectsDB := db.GetDBObjectsInRange(a, b)
+func RandomObjectsInRange(a, b points.Point, count int64, filters filters.StringFilter) []Object {
+	objectsDB := db.GetDBObjectsInRange(a, b, filters.Int())
 	var objects []Object
 	for _, o := range objectsDB {
 		objects = append(objects, *(ObjectByDBObject(&o)))

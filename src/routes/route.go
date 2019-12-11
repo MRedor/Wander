@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"filters"
 	"points"
 	"db"
 	"encoding/json"
@@ -27,7 +28,8 @@ type Route struct {
 	Time    int              `json:"time"`   //seconds
 	Name    string           `json:"name"`
 	Type    string
-	Radius  int
+	radius  int
+	filters int
 }
 
 func RouteByDBRoute(r *db.DBRoute) *Route {
@@ -39,7 +41,8 @@ func RouteByDBRoute(r *db.DBRoute) *Route {
 		Time:    r.Time,
 		Name:    r.Name,
 		Type:    r.Type,
-		Radius:  r.Radius,
+		radius:  r.Radius,
+		filters: r.Filters,
 	}
 
 	json.Unmarshal([]byte(r.Objects), route.Objects)
@@ -54,23 +57,23 @@ func NameByRoute(route *Route) string {
 	return fmt.Sprintf("Route %v", route.Id)
 }
 
-func ABRoute(a, b points.Point) (*Route, error) {
-	route, err := getDirectRoute(a, b)
+func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
+	route, err := getDirectRoute(a, b, filters)
 	if route != nil || err != nil {
 		return route, err
 	}
-	randomObjects := objects.RandomObjectsInRange(a, b, 10)
+	randomObjects := objects.RandomObjectsInRange(a, b, 10, filters)
 	sort.Slice(randomObjects, func(i, j int) bool {
 		return a.Distance(randomObjects[i].Position) < a.Distance(randomObjects[j].Position)
 	})
 	route, err = RouteByObjects(randomObjects)
 	route.Type = string(Direct)
-	route.Id = saveInDB(route)
+	route.Id = saveInDB(route, filters.Int())
 	return route, err
 }
 
-func RoundRoute(start points.Point, radius int) (*Route, error) {
-	route, err := getRoundRoute(start, radius)
+func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*Route, error) {
+	route, err := getRoundRoute(start, radius, filters)
 	if route != nil || err != nil {
 		return route, err
 	}
@@ -83,7 +86,7 @@ func RoundRoute(start points.Point, radius int) (*Route, error) {
 		Lon: start.Lon + float64(radius),
 	}
 	// пока в маршрут выбираем случайные объекты
-	objects := objects.RandomObjectsInRange(a, b, 10)
+	objects := objects.RandomObjectsInRange(a, b, 10, filters)
 	// сортируем по полярному углу относительно старта
 	sort.Slice(objects, func(i, j int) bool {
 		x1 := objects[i].Position.Lat - start.Lat
@@ -94,12 +97,12 @@ func RoundRoute(start points.Point, radius int) (*Route, error) {
 	})
 	route, err = RouteByObjects(objects)
 	route.Type = string(Round)
-	route.Radius = radius
-	route.Id = saveInDB(route)
+	route.radius = radius
+	route.Id = saveInDB(route, filters.Int())
 	return route, err
 }
 
-func saveInDB(route *Route) int64 {
+func saveInDB(route *Route, filters int) int64 {
 	dbroute := db.DBRoute{
 		Start_lat:  route.Points[0].Lat,
 		Start_lon:  route.Points[0].Lon,
@@ -108,6 +111,7 @@ func saveInDB(route *Route) int64 {
 		Length:     route.Length,
 		Time:       route.Time,
 		Name:       route.Name,
+		Filters:    filters,
 	}
 	objectsJSON, _ := json.Marshal(route.Objects)
 	dbroute.Objects = string(objectsJSON)
@@ -119,7 +123,7 @@ func saveInDB(route *Route) int64 {
 		return db.InsertDirectRoute(dbroute)
 	} else {
 		dbroute.Type = string(Round)
-		dbroute.Radius = route.Radius
+		dbroute.Radius = route.radius
 		return db.InsertRoundRoute(dbroute)
 	}
 }
@@ -146,16 +150,16 @@ func RouteById(id int64) (*Route, error) {
 	return RouteByDBRoute(dbroute), nil
 }
 
-func getDirectRoute(a, b points.Point) (*Route, error) {
-	dbroute, err := db.GetDirectDBRoute(a, b)
+func getDirectRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
+	dbroute, err := db.GetDirectDBRoute(a, b, filters.Int())
 	if err != nil {
 		return nil, err
 	}
 	return RouteByDBRoute(dbroute), nil
 }
 
-func getRoundRoute(start points.Point, radius int) (*Route, error) {
-	dbroute, err := db.GetRoundDBRoute(start, radius)
+func getRoundRoute(start points.Point, radius int, filters filters.StringFilter) (*Route, error) {
+	dbroute, err := db.GetRoundDBRoute(start, radius, filters.Int())
 	if err != nil {
 		return nil, err
 	}
@@ -198,8 +202,9 @@ func RemovePoint(routeId, objectId int64) (*Route, error) {
 	routeType := route.Type
 	radius := -1
 	if routeType == string(Round) {
-		radius = route.Radius
+		radius = route.radius
 	}
+	routeFilters := route.filters
 
 	route, err = RouteByObjects(route.Objects)
 	if err != nil {
@@ -207,9 +212,9 @@ func RemovePoint(routeId, objectId int64) (*Route, error) {
 	}
 	route.Type = routeType
 	if routeType == string(Round) {
-		route.Radius = radius
+		route.radius = radius
 	}
-	route.Id = saveInDB(route)
+	route.Id = saveInDB(route, routeFilters)
 
 	return route, err
 }

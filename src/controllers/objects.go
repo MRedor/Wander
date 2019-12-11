@@ -73,5 +73,5 @@ func getRandomObjects(c echo.Context) error {
 		log.Println(err)
 		return c.JSON(http.StatusBadRequest, CreateError(0, "count should be an integer"))
 	}
-	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count))
+	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, []string{}))
 }
