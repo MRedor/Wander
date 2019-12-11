@@ -22,8 +22,20 @@ type Object struct {
 	Description string `json:"description"`
 }
 
-func (p Object) PositionString() string {
-	return fmt.Sprintf("%f,%f", p.Position.Lat, p.Position.Lon)
+func (o Object) PositionString() string {
+	return fmt.Sprintf("%f,%f", o.Position.Lat, o.Position.Lon)
+}
+
+func (o Object) Point() points.Point {
+	return o.Position
+}
+
+func PointsByObjects(objects []Object) []points.Point {
+	result := []points.Point{}
+	for _, o := range objects {
+		result = append(result, o.Point())
+	}
+	return result
 }
 
 func ObjectById(id int64) (*Object, error) {

@@ -62,13 +62,20 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	if route != nil || err != nil {
 		return route, err
 	}
-	randomObjects := objects.RandomObjectsInRange(a, b, 10, filters)
-	sort.Slice(randomObjects, func(i, j int) bool {
-		return a.Distance(randomObjects[i].Position) < a.Distance(randomObjects[j].Position)
+	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
+	sort.Slice(routeObjects, func(i, j int) bool {
+		return a.Distance(routeObjects[i].Position) < a.Distance(routeObjects[j].Position)
 	})
-	route, err = RouteByObjects(randomObjects)
+	routeMainPoints := append([]points.Point{a}, objects.PointsByObjects(routeObjects)...)
+	routeMainPoints = append(routeMainPoints, b)
+	route, err = RouteByPoints(routeMainPoints)
+	if err != nil {
+		return nil, err
+	}
+	route.Objects = routeObjects
 	route.Type = string(Direct)
 	route.Id = saveInDB(route, filters.Int())
+	route.Name = NameByRoute(route)
 	return route, err
 }
 
@@ -86,19 +93,26 @@ func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*
 		Lon: start.Lon + float64(radius),
 	}
 	// пока в маршрут выбираем случайные объекты
-	objects := objects.RandomObjectsInRange(a, b, 10, filters)
+	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
 	// сортируем по полярному углу относительно старта
-	sort.Slice(objects, func(i, j int) bool {
-		x1 := objects[i].Position.Lat - start.Lat
-		y1 := objects[i].Position.Lon - start.Lon
-		x2 := objects[j].Position.Lat - start.Lat
-		y2 := objects[j].Position.Lon - start.Lon
+	sort.Slice(routeObjects, func(i, j int) bool {
+		x1 := routeObjects[i].Position.Lat - start.Lat
+		y1 := routeObjects[i].Position.Lon - start.Lon
+		x2 := routeObjects[j].Position.Lat - start.Lat
+		y2 := routeObjects[j].Position.Lon - start.Lon
 		return (x1*y2 - x2*y1) < 0
 	})
-	route, err = RouteByObjects(objects)
+	routeMainPoints := append([]points.Point{start}, objects.PointsByObjects(routeObjects)...)
+	routeMainPoints = append(routeMainPoints, start)
+	route, err = RouteByPoints(routeMainPoints)
+	if err != nil {
+		return nil, err
+	}
+	route.Objects = routeObjects
 	route.Type = string(Round)
 	route.radius = radius
 	route.Id = saveInDB(route, filters.Int())
+	route.Name = NameByRoute(route)
 	return route, err
 }
 
@@ -134,11 +148,15 @@ func RouteByObjects(objects []objects.Object) (*Route, error) {
 		//ищем маршрут между парами
 	}
 	result.Objects = objects
-	//result.Id, err = db.FreeIdInRoutes()
-	if err != nil {
-		return nil, err
-	}
 	result.Name = NameByRoute(result)
+	return result, nil
+}
+
+func RouteByPoints(points []points.Point) (*Route, error) {
+	result, err := routeByOSRMResponce(osrm.GetOSRMByPoints(points))
+	if err != nil {
+		//ищем маршрут между парами
+	}
 	return result, nil
 }
 
