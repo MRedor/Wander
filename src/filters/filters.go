@@ -17,21 +17,25 @@ var (
 type StringFilter []string
 
 func (f StringFilter) Int() int {
-	result := 0
-
 	if len(f) == 0 {
-		for _, type_ := range FilterTypes{
-			result += type_.Value
-		}
-		return result
+		return emptyFilterValue()
 	}
 
+	result := 0
 	for _, filter := range f {
 		for _, type_ := range FilterTypes {
 			if filter == type_.Name {
 				result += type_.Value
 			}
 		}
+	}
+	return result
+}
+
+func emptyFilterValue() int {
+	result := 0
+	for _, type_ := range FilterTypes{
+		result += type_.Value
 	}
 	return result
 }
