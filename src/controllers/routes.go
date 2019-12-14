@@ -17,13 +17,13 @@ func getRoute(c echo.Context) error {
 	}
 
 	var route *routes.Route
-	if req.Type == string(routes.Direct) {
+
+	switch req.Type {
+	case string(routes.Direct):
 		route, err = routes.ABRoute(req.Points[0], req.Points[1], req.Filters)
-	}
-	if req.Type == string(routes.Round) {
+	case string(routes.Round):
 		route, err = routes.RoundRoute(req.Points[0], req.Radius, req.Filters)
-	}
-	if route == nil {
+	default:
 		return c.JSON(http.StatusBadRequest, CreateError(0, "unsupported route type"))
 	}
 
