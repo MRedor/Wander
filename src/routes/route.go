@@ -209,36 +209,74 @@ func RemovePoint(routeId, objectId int64) (*Route, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if route.Type == string(Round) {
+		return removePointFromRoundRoute(route, objectId)
+	} else {
+		return removePointFromDirectRoute(route, objectId)
+	}
+}
+
+func searchInObjectSlice(objectId int64, slice []objects.Object) int {
 	idInSlice := -1
-	for i := 0; i < len(route.Objects); i++ {
-		if route.Objects[i].Id == objectId {
+	for i := 0; i < len(slice); i++ {
+		if slice[i].Id == objectId {
 			idInSlice = i
 			break
 		}
 	}
+	return idInSlice
+}
+
+func removePointFromRoundRoute(route *Route, objectId int64) (*Route, error) {
+	idInSlice := searchInObjectSlice(objectId, route.Objects)
 	if idInSlice == -1 {
 		return nil, errors.New("no object with given id in the route")
 	}
-	route.Objects = append(route.Objects[:idInSlice], route.Objects[idInSlice+1:]...) //удаляем
+	routeObjects := append(route.Objects[:idInSlice], route.Objects[idInSlice+1:]...) //удаляем
+	routeMainPoints := append([]points.Point{route.Points[0]}, objects.PointsByObjects(routeObjects)...)
+	routeMainPoints = append(routeMainPoints, route.Points[0])
 
-	routeType := route.Type
-	radius := -1
-	if routeType == string(Round) {
-		radius = route.radius
-	}
+	radius := route.radius
 	routeFilters := route.filters
 
-	route, err = routeByObjects(route.Objects)
+	route, err := routeByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
-	route.Type = routeType
-	if routeType == string(Round) {
-		route.radius = radius
-	}
+
+	route.Objects = routeObjects
+	route.Type = string(Round)
+	route.radius = radius
 	route.Id = saveInDB(route, routeFilters)
 	route.Name = nameByRoute(route)
 	db.UpdateRouteName(route.Id, route.Name)
 
 	return route, err
 }
+
+func removePointFromDirectRoute(route *Route, objectId int64) (*Route, error) {
+	idInSlice := searchInObjectSlice(objectId, route.Objects)
+	if idInSlice == -1 {
+		return nil, errors.New("no object with given id in the route")
+	}
+	routeObjects := append(route.Objects[:idInSlice], route.Objects[idInSlice+1:]...) //удаляем
+	routeMainPoints := append([]points.Point{route.Points[0]}, objects.PointsByObjects(routeObjects)...)
+	routeMainPoints = append(routeMainPoints, route.Points[len(route.Points)-1])
+
+	routeFilters := route.filters
+
+	route, err := routeByPoints(routeMainPoints)
+	if err != nil {
+		return nil, err
+	}
+
+	route.Objects = routeObjects
+	route.Type = string(Direct)
+	route.Id = saveInDB(route, routeFilters)
+	route.Name = nameByRoute(route)
+	db.UpdateRouteName(route.Id, route.Name)
+
+	return route, err
+}
+
