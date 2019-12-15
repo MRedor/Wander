@@ -71,11 +71,6 @@ func GetRoundDBRoute(start points.Point, radius, filters int) (*DBRoute, error) 
 		return nil, err
 	}
 
-	query = fmt.Sprintf(
-		"update routes set count=count + 1 where (start_lat=%f and start_lon=%f and radius=%f)",
-		start.Lat, start.Lon, radius)
-	db.Exec(query)
-
 	return &route, nil
 }
 
@@ -93,12 +88,12 @@ func GetDirectDBRoute(a, b points.Point, filters int) (*DBRoute, error) {
 		return nil, err
 	}
 
-	query = fmt.Sprintf(
-		"update routes set count=count + 1 where (start_lat=%f and start_lon=%f and finish_lat=%f and finish_lon=%f)",
-		a.Lat, a.Lon, b.Lat, b.Lon)
-	db.Exec(query)
-
 	return &route, nil
+}
+
+func UpdateRouteCounter(id int64) {
+	query := fmt.Sprintf("update routes set count=count + 1 where id=%v", id)
+	db.Exec(query)
 }
 
 func DBRouteById(id int64) (*DBRoute, error) {

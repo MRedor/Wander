@@ -60,6 +60,7 @@ func nameByRoute(route *Route) string {
 func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	route, err := getDirectRoute(a, b, filters)
 	if route != nil || err != nil {
+		db.UpdateRouteCounter(route.Id)
 		return route, err
 	}
 	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
@@ -82,6 +83,7 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*Route, error) {
 	route, err := getRoundRoute(start, radius, filters)
 	if route != nil || err != nil {
+		db.UpdateRouteCounter(route.Id)
 		return route, err
 	}
 	a := points.Point{
