@@ -60,6 +60,10 @@ func parseBoundingBox(box string) (*points.Point, *points.Point, error) {
 	return &points.Point{Lat: latA, Lon: lonA}, &points.Point{Lat: latB, Lon: lonB}, nil
 }
 
+func parseFilters(filters string) []string {
+	return strings.Split(filters, ",")
+}
+
 func getRandomObjects(c echo.Context) error {
 	boundingBox := c.Param("boundingBox")
 	a, b, err := parseBoundingBox(boundingBox)
@@ -73,5 +77,11 @@ func getRandomObjects(c echo.Context) error {
 		log.Println(err)
 		return c.JSON(http.StatusBadRequest, CreateError(0, "count should be an integer"))
 	}
-	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, []string{}))
+
+	if c.Param("types") == "" {
+		return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, []string{}))
+	}
+
+	filters := parseFilters(c.Param("types"))
+	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, filters))
 }
