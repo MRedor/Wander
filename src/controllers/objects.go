@@ -1,10 +1,12 @@
-package main
+package controllers
 
 import (
+	"points"
 	"errors"
 	"github.com/labstack/echo"
 	"log"
 	"net/http"
+	"objects"
 	"strconv"
 	"strings"
 )
@@ -13,18 +15,23 @@ func getObjectById(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		log.Println(err)
-		return c.JSON(http.StatusBadRequest, "id should be an integer")
+		return c.JSON(http.StatusBadRequest, CreateError(0, "id should be an integer"))
 	}
-	return c.JSON(http.StatusOK, ObjectById(id))
+	o, err := objects.ObjectById(id)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, CreateError(0, "no object with given id"))
+	}
+	return c.JSON(http.StatusOK, *o)
 }
 
-func parseBoundingBox(box string) (*Point, *Point, error) {
-	points := strings.Split(box, ";")
-	if len(points) != 2 {
+func parseBoundingBox(box string) (*points.Point, *points.Point, error) {
+	got := strings.Split(box, ";")
+	if len(got) != 2 {
 		return nil, nil, errors.New("two points should be passed")
 	}
 
-	a := strings.Split(points[0], ",")
+	a := strings.Split(got[0], ",")
 	if len(a) != 2 {
 		return nil, nil, errors.New("point should have two coordinates")
 	}
@@ -37,7 +44,7 @@ func parseBoundingBox(box string) (*Point, *Point, error) {
 		return nil, nil, errors.New("point should have two float coordinates")
 	}
 
-	b := strings.Split(points[1], ",")
+	b := strings.Split(got[1], ",")
 	if len(b) != 2 {
 		return nil, nil, errors.New("point should have two coordinates")
 	}
@@ -50,7 +57,11 @@ func parseBoundingBox(box string) (*Point, *Point, error) {
 		return nil, nil, errors.New("point should have two float coordinates")
 	}
 
-	return &Point{Lat: latA, Lon: lonA}, &Point{Lat: latB, Lon: lonB}, nil
+	return &points.Point{Lat: latA, Lon: lonA}, &points.Point{Lat: latB, Lon: lonB}, nil
+}
+
+func parseFilters(filters string) []string {
+	return strings.Split(filters, ",")
 }
 
 func getRandomObjects(c echo.Context) error {
@@ -58,43 +69,19 @@ func getRandomObjects(c echo.Context) error {
 	a, b, err := parseBoundingBox(boundingBox)
 	if err != nil {
 		log.Println("getRandomObjects: ", err)
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, CreateError(0, err.Error()))
 	}
 
 	count, err := strconv.ParseInt(c.QueryParam("count"), 10, 64)
 	if err != nil {
 		log.Println(err)
-		return c.JSON(http.StatusBadRequest, "count should be an integer")
+		return c.JSON(http.StatusBadRequest, CreateError(0, "count should be an integer"))
 	}
-	return c.JSON(http.StatusOK, RandomObjectsInRange(*a, *b, count))
-}
 
-func removePoint(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
-}
+	if c.Param("types") == "" {
+		return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, []string{}))
+	}
 
-func getRouteById(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
-}
-
-func getListById(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, c.Param("id"))
-}
-
-func getLists(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
-}
-
-func saveFeedback(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
-}
-
-func getRoute(c echo.Context) error {
-	// todo:
-	return c.JSON(http.StatusOK, "test response")
+	filters := parseFilters(c.Param("types"))
+	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, filters))
 }
