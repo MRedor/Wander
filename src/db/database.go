@@ -96,6 +96,11 @@ func UpdateRouteCounter(id int64) {
 	db.Exec(query)
 }
 
+func UpdateRouteName(id int64, name string) {
+	query := fmt.Sprintf(`update routes set name="%s" where id=%v`, name, id)
+	db.Exec(query)
+}
+
 func DBRouteById(id int64) (*DBRoute, error) {
 	var route = DBRoute{}
 

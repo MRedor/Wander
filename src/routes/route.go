@@ -77,6 +77,7 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	route.Type = string(Direct)
 	route.Id = saveInDB(route, filters.Int())
 	route.Name = nameByRoute(route)
+	db.UpdateRouteName(route.Id, route.Name)
 	return route, err
 }
 
@@ -115,6 +116,7 @@ func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*
 	route.radius = radius
 	route.Id = saveInDB(route, filters.Int())
 	route.Name = nameByRoute(route)
+	db.UpdateRouteName(route.Id, route.Name)
 	return route, err
 }
 
@@ -235,7 +237,8 @@ func RemovePoint(routeId, objectId int64) (*Route, error) {
 		route.radius = radius
 	}
 	route.Id = saveInDB(route, routeFilters)
-
+	route.Name = nameByRoute(route)
+	db.UpdateRouteName(route.Id, route.Name)
 
 	return route, err
 }
