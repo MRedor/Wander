@@ -4,3 +4,6 @@ database:
   user: "wander"
   password: "wanderpassword"
   database: "wander"
+email:
+  login: "??"
+  password: "??"
