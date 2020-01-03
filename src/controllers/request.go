@@ -15,3 +15,8 @@ type RemovePointRequest struct {
 	ObjectId int
 	RouteId  int
 }
+
+type GetListsRequest struct {
+	Count  int64 `json:"count"`
+	Offset int64 `json:"offset"`
+}

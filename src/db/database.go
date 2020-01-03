@@ -142,3 +142,39 @@ func InsertRoundRoute(route DBRoute) int64 {
 	id, _ := res.LastInsertId()
 	return id
 }
+
+func DBListById(id int64) (*DBList, error) {
+	var list = DBList{}
+
+	err := db.Get(&list, "select * from lists where id=?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &list, nil
+}
+
+func ObjectsForList(id int64) ([]DBObject, error) {
+	result := []DBObject{}
+	query := fmt.Sprintf("select * from objects_in_list where id=%v", id)
+
+	err := db.Select(&result, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func RoutesForList(id int64) ([]DBRoute, error) {
+	result := []DBRoute{}
+
+	query := fmt.Sprintf("select * from routes_in_list where id=%v", id)
+
+	err := db.Select(&result, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
