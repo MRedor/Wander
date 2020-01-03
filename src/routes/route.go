@@ -1,15 +1,16 @@
 package routes
 
 import (
-	"filters"
-	"points"
 	"db"
 	"encoding/json"
 	"errors"
+	"filters"
 	"fmt"
 	"math"
 	"objects"
 	"osrm"
+	"points"
+	"routes/types"
 	"sort"
 )
 
@@ -64,11 +65,23 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 		return route, err
 	}
 	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
-	sort.Slice(routeObjects, func(i, j int) bool {
-		return a.Distance(routeObjects[i].Position) < a.Distance(routeObjects[j].Position)
-	})
-	routeMainPoints := append([]points.Point{a}, objects.PointsByObjects(routeObjects)...)
-	routeMainPoints = append(routeMainPoints, b)
+
+	var routeMainPoints []points.Point
+	if false {
+		// todo: implement
+		//routeObjects = objects.getAllObjectInRange(a, b, filters)
+		pathObjects := routes.ABRoute{Start: a, Finish: b}.Build(routeObjects)
+		routeMainPoints = []points.Point{a}
+		routeMainPoints = append(routeMainPoints, objects.PointsByObjects(pathObjects)...)
+		routeMainPoints = append(routeMainPoints, b)
+	} else {
+		// old solution
+		sort.Slice(routeObjects, func(i, j int) bool {
+			return a.Distance(routeObjects[i].Position) < a.Distance(routeObjects[j].Position)
+		})
+		routeMainPoints = append([]points.Point{a}, objects.PointsByObjects(routeObjects)...)
+		routeMainPoints = append(routeMainPoints, b)
+	}
 	route, err = routeByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
@@ -88,30 +101,23 @@ func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*
 		return route, err
 	}
 	a := points.Point{
-		Lat: start.Lat - float64(radius),
-		Lon: start.Lon - float64(radius),
+		Lat: start.Lat - routes.MetersToLat(float64(radius)),
+		Lon: start.Lon - routes.MetersToLon(start, float64(radius)),
 	}
 	b := points.Point{
-		Lat: start.Lat + float64(radius),
-		Lon: start.Lon + float64(radius),
+		Lat: start.Lat + routes.MetersToLat(float64(radius)),
+		Lon: start.Lon + routes.MetersToLon(start, float64(radius)),
 	}
-	// пока в маршрут выбираем случайные объекты
-	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
-	// сортируем по полярному углу относительно старта
-	sort.Slice(routeObjects, func(i, j int) bool {
-		x1 := routeObjects[i].Position.Lat - start.Lat
-		y1 := routeObjects[i].Position.Lon - start.Lon
-		x2 := routeObjects[j].Position.Lat - start.Lat
-		y2 := routeObjects[j].Position.Lon - start.Lon
-		return (x1*y2 - x2*y1) < 0
-	})
-	routeMainPoints := append([]points.Point{start}, objects.PointsByObjects(routeObjects)...)
+	allObjects := objects.RandomObjectsInRange(a, b, 100, filters)
+	pathObjects := routes.RoundRoute{Center: start, Radius: radius}.Build(allObjects)
+	routeMainPoints := append([]points.Point{start}, objects.PointsByObjects(pathObjects)...)
 	routeMainPoints = append(routeMainPoints, start)
+
 	route, err = routeByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
-	route.Objects = routeObjects
+	route.Objects = pathObjects
 	route.Type = string(Round)
 	route.radius = radius
 	route.Id = saveInDB(route, filters.Int())
@@ -279,4 +285,3 @@ func removePointFromDirectRoute(route *Route, objectId int64) (*Route, error) {
 
 	return route, err
 }
-

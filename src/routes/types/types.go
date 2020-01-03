@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"fmt"
 	"math"
 	"objects"
 	"points"
+	"sort"
 )
 
 type RouteBuilder interface {
@@ -12,8 +12,8 @@ type RouteBuilder interface {
 }
 
 type ABRoute struct {
-	start  points.Point
-	finish points.Point
+	Start  points.Point
+	Finish points.Point
 }
 
 const coefficientCurrentLengthToFinish = 1 / 1.6
@@ -30,7 +30,6 @@ func (r ABRoute) selectBest(current points.Point, finish points.Point, allObject
 			minDistance = distance
 			selected = &allObjects[index]
 			selectedIndex = index
-			fmt.Print("2")
 		}
 	}
 	return selected, selectedIndex
@@ -42,10 +41,10 @@ func (r ABRoute) Build(allObjects []objects.Object) []objects.Object {
 
 	var pathObjects []objects.Object
 
-	current := r.start
+	current := r.Start
 
 	for !allFind {
-		selected, selectedIndex := r.selectBest(current, r.finish, allObjects)
+		selected, selectedIndex := r.selectBest(current, r.Finish, allObjects)
 
 		if selected != nil {
 			pathObjects = append(pathObjects, *selected)
@@ -60,26 +59,103 @@ func (r ABRoute) Build(allObjects []objects.Object) []objects.Object {
 }
 
 type RoundRoute struct {
-	start  points.Point
-	radius int
+	Center points.Point
+	Radius int // in meters
 }
 
-func (r RoundRoute) Build([]objects.Object) []objects.Object {
-	// todo: implement
-	return nil
+func (r RoundRoute) Build(allObjects []objects.Object) []objects.Object {
+	if len(allObjects) == 0 {
+		return allObjects
+	}
+
+	var pathObjects []objects.Object
+
+	var firstObject = allObjects[0]
+	var minLat = firstObject.Position.Lat
+	var minLon = firstObject.Position.Lon
+
+	for _, one := range allObjects {
+		if getMetersDistanceByPoints(one.Position, r.Center) < getMetersDistanceByPoints(firstObject.Position, r.Center) {
+			firstObject = one
+		}
+		if one.Position.Lat < minLat {
+			minLat = one.Position.Lat
+		}
+		if one.Position.Lon < minLon {
+			minLon = one.Position.Lon
+		}
+	}
+
+	var startCoordinates = points.Point{Lat: minLat, Lon: minLon}
+
+	pathObjects = append(pathObjects, firstObject)
+
+	var centerX = getMetersDistance(startCoordinates.Lat, startCoordinates.Lon, startCoordinates.Lat, r.Center.Lon)
+	var centerY = getMetersDistance(startCoordinates.Lat, startCoordinates.Lon, r.Center.Lat, startCoordinates.Lon)
+	var centerCoordinate = Coordinate{centerX, centerY}
+
+	var firstPointX = getMetersDistance(startCoordinates.Lat, startCoordinates.Lon, startCoordinates.Lat, firstObject.Position.Lon)
+	var firstPointY = getMetersDistance(startCoordinates.Lat, startCoordinates.Lon, firstObject.Position.Lat, startCoordinates.Lon)
+	var firstPointCoordinate = Coordinate{firstPointX, firstPointY}
+
+	var objectData []Data
+	for _, one := range allObjects {
+		if one == firstObject {
+			continue
+		}
+
+		var x = getMetersDistance(startCoordinates.Lat, startCoordinates.Lon, startCoordinates.Lat, one.Position.Lon)
+		var y = getMetersDistance(startCoordinates.Lat, startCoordinates.Lon, one.Position.Lat, startCoordinates.Lon)
+
+		var angle = getAngle(centerCoordinate, firstPointCoordinate, Coordinate{x, y})
+		objectData = append(objectData, Data{angle, Coordinate{x, y}, one})
+	}
+
+	sort.Slice(objectData, func(i, j int) bool {
+		return objectData[i].angle < objectData[j].angle
+	})
+
+	var currentDistanceStartToPoint = getPythagorasDistance(centerCoordinate.x, centerCoordinate.y, firstPointCoordinate.x, firstPointCoordinate.y)
+	var distanceNorm = r.getDistanceNorm(currentDistanceStartToPoint)
+	var currentAngle = 0.0
+
+	for _, candidate := range objectData {
+
+		if candidate.angle < currentAngle+AgeStep {
+			// пропускаем точку, если угол между ней, центром и предыдущей точкой меньше 5 градусов
+			// это позволяет делать маршрут равномерным
+			continue
+		}
+
+		var candidateDistance = getPythagorasDistance(centerCoordinate.x, centerCoordinate.y, candidate.coordinate.x, candidate.coordinate.y)
+		if candidateDistance/distanceNorm > 2 || candidateDistance/distanceNorm < 0.5 {
+			// расстояние от центра до следующей точки не должно отличаться более чем в два раза от расстояния до предыдущей точки
+			continue
+		}
+
+		pathObjects = append(pathObjects, candidate.objectEntity)
+		currentAngle = candidate.angle
+		distanceNorm = r.getDistanceNorm(candidateDistance)
+	}
+
+	return pathObjects
 }
 
-func getManhattanDistance(a points.Point, b points.Point) float64 {
-	return getPythagorasDistance(a.Lat, a.Lon, b.Lat, a.Lon) + getPythagorasDistance(a.Lat, a.Lon, a.Lat, b.Lon)
+func (r RoundRoute) getDistanceNorm(distance float64) float64 {
+	return math.Max(distance, float64(r.Radius)/3)
 }
 
-func getPythagorasDistance(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
-	dLat := (lat1 + lat2) / 2
-	lon1P := lon1 * math.Cos(deg2rad(dLat)) // поправка из-за разницы широты и долготы
-	lon2P := lon2 * math.Cos(deg2rad(dLat))
-	return math.Sqrt(math.Pow(lat1-lat2, 2) + math.Pow(lon1P-lon2P, 2))
+type Data struct {
+	angle        float64
+	coordinate   Coordinate
+	objectEntity objects.Object
 }
 
-func deg2rad(deg float64) float64 {
-	return deg * math.Pi / 180.0
+type Coordinate struct {
+	x float64
+	y float64
 }
+
+const EarthRadius = 6371000
+const EquatorLength = 40075000
+const AgeStep = 5
