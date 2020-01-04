@@ -11,7 +11,6 @@ import (
 	"osrm"
 	"points"
 	"routes/types"
-	"sort"
 )
 
 type RouteType string
@@ -60,28 +59,18 @@ func nameByRoute(route *Route) string {
 
 func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	route, err := getDirectRoute(a, b, filters)
-	if route != nil || err != nil {
+	if route != nil {
 		db.UpdateRouteCounter(route.Id)
 		return route, err
 	}
 	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
 
-	var routeMainPoints []points.Point
-	if false {
-		// todo: implement
-		//routeObjects = objects.getAllObjectInRange(a, b, filters)
-		pathObjects := routes.ABRoute{Start: a, Finish: b}.Build(routeObjects)
-		routeMainPoints = []points.Point{a}
-		routeMainPoints = append(routeMainPoints, objects.PointsByObjects(pathObjects)...)
-		routeMainPoints = append(routeMainPoints, b)
-	} else {
-		// old solution
-		sort.Slice(routeObjects, func(i, j int) bool {
-			return a.Distance(routeObjects[i].Position) < a.Distance(routeObjects[j].Position)
-		})
-		routeMainPoints = append([]points.Point{a}, objects.PointsByObjects(routeObjects)...)
-		routeMainPoints = append(routeMainPoints, b)
-	}
+	routeObjects = objects.GetAllObjectInRange(a, b, filters)
+	pathObjects := routes.ABRoute{Start: a, Finish: b}.Build(routeObjects)
+	routeMainPoints := []points.Point{a}
+	routeMainPoints = append(routeMainPoints, objects.PointsByObjects(pathObjects)...)
+	routeMainPoints = append(routeMainPoints, b)
+
 	route, err = routeByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
