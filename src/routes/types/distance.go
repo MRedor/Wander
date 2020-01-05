@@ -29,7 +29,7 @@ func getPythagorasDistance(lat1 float64, lon1 float64, lat2 float64, lon2 float6
 	return math.Sqrt(math.Pow(lat1-lat2, 2) + math.Pow(lon1P-lon2P, 2))
 }
 
-func getMetersDistanceByPoints(a points.Point, b points.Point) float64 {
+func GetMetersDistanceByPoints(a points.Point, b points.Point) float64 {
 	return getMetersDistance(a.Lat, a.Lon, b.Lat, b.Lon)
 }
 

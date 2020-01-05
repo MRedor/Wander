@@ -75,7 +75,7 @@ func (r RoundRoute) Build(allObjects []objects.Object) []objects.Object {
 	var minLon = firstObject.Position.Lon
 
 	for _, one := range allObjects {
-		if getMetersDistanceByPoints(one.Position, r.Center) < getMetersDistanceByPoints(firstObject.Position, r.Center) {
+		if GetMetersDistanceByPoints(one.Position, r.Center) < GetMetersDistanceByPoints(firstObject.Position, r.Center) {
 			firstObject = one
 		}
 		if one.Position.Lat < minLat {
