@@ -178,3 +178,27 @@ func RoutesForList(id int64) ([]DBRoute, error) {
 
 	return result, nil
 }
+
+func GetLists(count, offset int64) ([]DBList, error) {
+	result := []DBList{}
+
+	query := fmt.Sprintf("select * from lists limit %v offset %v", count, offset)
+
+	err := db.Select(&result, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func LastListId() (int, error) {
+	var id int
+
+	err := db.Select(&id, "select id from lists order by id desc limit 1")
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}

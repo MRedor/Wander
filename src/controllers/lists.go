@@ -23,15 +23,29 @@ func getListById(c echo.Context) error {
 	return c.JSON(http.StatusOK, *list)
 }
 
+type GetListsResponse struct {
+	Lists  []lists.List `json:"lists"`
+	IsLast bool         `json:"isLast"`
+}
+
 func getLists(c echo.Context) error {
 	req := GetListsRequest{}
 	err := json.NewDecoder(c.Request().Body).Decode(&req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, CreateError(0, "wrong request format"))
 	}
-	lists, err := lists.GetSliceOfLists(req.Count, req.Offset)
+
+	slice, err := lists.GetSliceOfLists(req.Count, req.Offset)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, CreateError(0, err.Error()))
 	}
-	return c.JSON(http.StatusOK, lists)
+
+	resp := GetListsResponse{Lists: slice}
+
+	resp.IsLast, err = lists.IsLastInSlice(req.Count, req.Offset)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, CreateError(0, err.Error()))
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
