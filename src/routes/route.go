@@ -141,20 +141,33 @@ func saveInDB(route *Route, filters int) int64 {
 	}
 }
 
-func routeByObjects(objects []objects.Object) (*Route, error) {
-	result, err := routeByOSRMResponce(osrm.GetOSRMByObjects(objects))
-	if err != nil {
-		//ищем маршрут между парами
-	}
-	result.Objects = objects
-	result.Name = nameByRoute(result)
-	return result, nil
+func getTimeByDistance(dist float64) int {
+	speed := float64(25) / 18
+	return int(math.Round(dist / speed))
 }
 
-func routeByPoints(points []points.Point) (*Route, error) {
-	result, err := routeByOSRMResponce(osrm.GetOSRMByPoints(points))
+func routeByPoints(points_ []points.Point) (*Route, error) {
+	result, err := routeByOSRMResponce(osrm.GetOSRMByPoints(points_))
 	if err != nil {
-		//ищем маршрут между парами
+		route := Route{
+			Points:  []points.Point{},
+			Length:  0,
+			Time:    0,
+		}
+		for i := 1; i < len(points_); i++ {
+			result, err := routeByOSRMResponce(osrm.GetOSRMByPoints([]points.Point{points_[i - 1], points_[i]}))
+			if err != nil {
+				route.Points = append(route.Points, points_[i - 1], points_[i])
+				dist := routes.GetMetersDistanceByPoints(points_[i - 1], points_[i])
+				route.Length += dist
+				route.Time += getTimeByDistance(dist)
+			} else {
+				route.Length += result.Length
+				route.Time += result.Time
+				route.Points = append(route.Points, result.Points...)
+			}
+		}
+		return &route, nil
 	}
 	return result, nil
 }
