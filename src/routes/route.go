@@ -142,7 +142,7 @@ func saveInDB(route *Route, filters int) int64 {
 }
 
 func getTimeByDistance(dist float64) int {
-	speed := float64(25) / 18
+	speed := float64(25) / 18 // 5 km/h ~ 1.4 m/s
 	return int(math.Round(dist / speed))
 }
 
