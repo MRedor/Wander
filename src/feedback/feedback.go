@@ -18,13 +18,13 @@ func (s *smtpServer) serverName() string {
 
 var server = smtpServer{"smtp.gmail.com", "587"}
 
-func CreateMessage(req controllers.FeedbackRequest) string {
+func createMessage(req controllers.FeedbackRequest) string {
 	return fmt.Sprintf("New feedback from %s related to %s:%v!\n\n %s",
 		req.Email, req.RelatedTo.Type, req.RelatedTo.Id, req.Text)
 }
 
-func Send(msg string) error {
-	message := []byte(msg)
+func Send(req controllers.FeedbackRequest) error {
+	message := []byte(createMessage(req))
 
 	err := smtp.SendMail(
 		server.serverName(),
