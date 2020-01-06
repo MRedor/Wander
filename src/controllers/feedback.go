@@ -13,7 +13,7 @@ func saveFeedback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, CreateError(0, "wrong request format"))
 	}
-	err = feedback.Send(req)
+	err = feedback.Send(req.Email, req.Text, req.RelatedTo.Id, req.RelatedTo.Type)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, CreateError(0, err.Error()))
 	}

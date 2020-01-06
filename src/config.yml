@@ -7,3 +7,5 @@ database:
 email:
   login: "??"
   password: "??"
+  host: "smtp.gmail.com"
+  port: "587"

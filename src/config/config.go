@@ -1,9 +1,9 @@
 package config
 
 import (
-	"os"
 	"gopkg.in/yaml.v2"
 	"log"
+	"os"
 )
 
 type config struct {
@@ -17,6 +17,8 @@ type config struct {
 	Email struct {
 		Login    string `yaml:"login"`
 		Password string `yaml:"password"`
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
 	} `yaml:"email"`
 }
 
@@ -35,5 +37,3 @@ func InitConfig() {
 }
 
 var Config config
-
-

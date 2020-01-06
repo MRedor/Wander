@@ -2,7 +2,6 @@ package feedback
 
 import (
 	"config"
-	"controllers"
 	"fmt"
 	"net/smtp"
 )
@@ -16,15 +15,15 @@ func (s *smtpServer) serverName() string {
 	return s.host + ":" + s.port
 }
 
-var server = smtpServer{"smtp.gmail.com", "587"}
+var server = smtpServer{config.Config.Email.Host, config.Config.Email.Port}
 
-func createMessage(req controllers.FeedbackRequest) string {
+func createMessage(email, text string, relatedId int, relatedType string) string {
 	return fmt.Sprintf("New feedback from %s related to %s:%v!\n\n %s",
-		req.Email, req.RelatedTo.Type, req.RelatedTo.Id, req.Text)
+		email, relatedType, relatedId, text)
 }
 
-func Send(req controllers.FeedbackRequest) error {
-	message := []byte(createMessage(req))
+func Send(email, text string, relatedId int, relatedType string) error {
+	message := []byte(createMessage(email, text, relatedId, relatedType))
 
 	err := smtp.SendMail(
 		server.serverName(),
