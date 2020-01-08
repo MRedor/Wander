@@ -160,7 +160,7 @@ func ObjectsForList(id int64) ([]DBObject, error) {
 
 	err := db.Select(&result, query)
 	if err != nil {
-		return nil, err
+		return []DBObject{}, err
 	}
 
 	return result, nil
@@ -173,7 +173,7 @@ func RoutesForList(id int64) ([]DBRoute, error) {
 
 	err := db.Select(&result, query)
 	if err != nil {
-		return nil, err
+		return []DBRoute{}, err
 	}
 
 	return result, nil
