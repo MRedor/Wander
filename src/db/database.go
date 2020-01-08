@@ -208,3 +208,34 @@ func LastListId() (int, error) {
 
 	return id, nil
 }
+
+func InsertList(type_, name string, views int) error {
+	query := fmt.Sprintf(
+		`insert into lists (type, name, views) values ("%s", "%s", %v)`,
+		type_,
+		name,
+		views,
+	)
+	_, err := db.Exec(query)
+	return err
+}
+
+func AddObjectToList(list_id, object_id int) error {
+	query := fmt.Sprintf(
+		`insert into objects_in_list (list_id, object_id) values (%v, %v)`,
+		list_id,
+		object_id,
+	)
+	_, err := db.Exec(query)
+	return err
+}
+
+func AddRouteToList(list_id, route_id int) error {
+	query := fmt.Sprintf(
+		`insert into routes_in_list (list_id, route_id) values (%v, %v)`,
+		list_id,
+		route_id,
+	)
+	_, err := db.Exec(query)
+	return err
+}
