@@ -13,6 +13,13 @@ type List struct {
 	Objects []objects.Object `json:"objects"`
 }
 
+type ListType string
+
+const (
+	Objects ListType = "objects"
+	Routes  ListType = "routes"
+)
+
 func ListByDBList(dblist db.DBList) List {
 	return List{
 		Id:   dblist.Id,
@@ -29,7 +36,7 @@ func ListById(id int64) (*List, error) {
 
 	var dbobjects []db.DBObject
 	var dbroutes []db.DBRoute
-	if dblist.Type == "routes" {
+	if dblist.Type == string(Routes) {
 		dbobjects, err = db.ObjectsForList(dblist.Id)
 		for _, dbo := range dbobjects {
 			list.Objects = append(list.Objects, *objects.ObjectByDBObject(&dbo))
