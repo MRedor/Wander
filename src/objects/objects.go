@@ -1,11 +1,11 @@
 package objects
 
 import (
-	"filters"
-	"points"
 	"db"
+	"filters"
 	"fmt"
 	"math/rand"
+	"points"
 )
 
 type Object struct {
@@ -15,9 +15,9 @@ type Object struct {
 	Image    string       `json:"image"`
 	Type     string       `json:"type"`
 
-	Address string `json:"address"`
-	Url     string `json:"link"`
-	Prices  string `json:"price"`
+	Address     string `json:"address"`
+	Url         string `json:"link"`
+	Prices      string `json:"price"`
 	WorkingTime string `json:"workingTime"`
 	Description string `json:"description"`
 }
@@ -44,6 +44,15 @@ func ObjectById(id int64) (*Object, error) {
 		return nil, err
 	}
 	return ObjectByDBObject(o), nil
+}
+
+func GetAllObjectInRange(a, b points.Point, filters filters.StringFilter) []Object {
+	objectsDB := db.GetDBObjectsInRange(a, b, filters.Int())
+	var objects []Object
+	for _, o := range objectsDB {
+		objects = append(objects, *(ObjectByDBObject(&o)))
+	}
+	return objects
 }
 
 // RandomObjectsInRange gets a slice of random objects from the given range.
