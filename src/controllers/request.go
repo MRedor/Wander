@@ -15,3 +15,12 @@ type RemovePointRequest struct {
 	ObjectId int
 	RouteId  int
 }
+
+type FeedbackRequest struct {
+	Email     string `json:"email"`
+	Text      string `json:"text"`
+	RelatedTo struct {
+		Id   int    `json:"id"`
+		Type string `json:"type"`
+	} `json:"relatedTo"`
+}

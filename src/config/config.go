@@ -1,4 +1,4 @@
-package db
+package config
 
 import (
 	"gopkg.in/yaml.v2"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type Config struct {
+type config struct {
 	Database struct {
 		Host     string `yaml:"host"`
 		Port     string `yaml:"port"`
@@ -14,20 +14,26 @@ type Config struct {
 		Password string `yaml:"password"`
 		Database string `yaml:"database"`
 	} `yaml:"database"`
+	Email struct {
+		Login    string `yaml:"login"`
+		Password string `yaml:"password"`
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+	} `yaml:"email"`
 }
 
-func readConfig() Config {
+func InitConfig() {
 	f, err := os.Open("../src/config.yml")
 	defer f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cfg := Config{}
 	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&cfg)
+	err = decoder.Decode(&Config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return cfg
 }
+
+var Config config

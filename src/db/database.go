@@ -1,6 +1,7 @@
 package db
 
 import (
+	"config"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
@@ -14,10 +15,9 @@ var (
 )
 
 func InitDB() {
-	cfg := readConfig()
-
 	source := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
-		cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Database)
+		config.Config.Database.Username, config.Config.Database.Password,
+		config.Config.Database.Host, config.Config.Database.Port, config.Config.Database.Database)
 	database, err := sqlx.Open("mysql", source)
 	if err != nil {
 		log.Fatal(err)
