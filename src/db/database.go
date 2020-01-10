@@ -113,7 +113,7 @@ func DBRouteById(id int64) (*DBRoute, error) {
 	return &route, nil
 }
 
-func InsertDirectRoute(route DBRoute) int64 {
+func InsertDirectRoute(route DBRoute) (int64, error) {
 	query := fmt.Sprintf(
 		`insert into routes (type, start_lat, start_lon, finish_lat, finish_lon, length, time, objects, points, name, filters) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s", %v)`,
 		route.Type,
@@ -122,14 +122,20 @@ func InsertDirectRoute(route DBRoute) int64 {
 		route.Objects, route.Points, route.Name,
 		route.Filters,
 		)
-	fmt.Println(query)
 
-	res, _ := db.Exec(query)
-	id, _ := res.LastInsertId()
-	return id
+	res, err := db.Exec(query)
+	if err != nil {
+		return 0, nil
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, nil
+	}
+
+	return id, nil
 }
 
-func InsertRoundRoute(route DBRoute) int64 {
+func InsertRoundRoute(route DBRoute) (int64, error) {
 	query := fmt.Sprintf(
 		`insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name, filters) values ("%s", %f, %f, %f, %f, %f, %v, "%s", "%s", "%s", %v)`,
 		route.Type,
@@ -139,9 +145,16 @@ func InsertRoundRoute(route DBRoute) int64 {
 		route.Filters,
 	)
 
-	res, _ := db.Exec(query)
-	id, _ := res.LastInsertId()
-	return id
+	res, err := db.Exec(query)
+	if err != nil {
+		return 0, nil
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, nil
+	}
+
+	return id, nil
 }
 
 func DBListById(id int64) (*DBList, error) {
