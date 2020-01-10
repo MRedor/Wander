@@ -142,3 +142,100 @@ func InsertRoundRoute(route DBRoute) int64 {
 	id, _ := res.LastInsertId()
 	return id
 }
+
+func DBListById(id int64) (*DBList, error) {
+	var list = DBList{}
+
+	err := db.Get(&list, "select * from lists where id=?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &list, nil
+}
+
+func ObjectsForList(id int64) ([]DBObject, error) {
+	result := []DBObject{}
+	query := fmt.Sprintf(
+		"select id, lat, lon, type, name, description, time, img, address, prices, url " +
+		"from points inner join objects_in_list " +
+		"on objects_in_list.object_id=points.id where objects_in_list.list_id=%v", id)
+
+	err := db.Select(&result, query)
+	if err != nil {
+		return []DBObject{}, err
+	}
+
+	return result, nil
+}
+
+func RoutesForList(id int64) ([]DBRoute, error) {
+	result := []DBRoute{}
+
+	query := fmt.Sprintf(
+		"select id, type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count " +
+		"from routes inner join routes_in_list " +
+		"on routes_in_list.route_id=routes.id where routes_in_list.list_id=%v", id)
+
+	err := db.Select(&result, query)
+	if err != nil {
+		return []DBRoute{}, err
+	}
+
+	return result, nil
+}
+
+func GetLists(count, offset int64) ([]DBList, error) {
+	result := []DBList{}
+
+	query := fmt.Sprintf("select * from lists limit %v offset %v", count, offset)
+
+	err := db.Select(&result, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func LastListId() (int, error) {
+	var id int
+
+	err := db.Select(&id, "select id from lists order by id desc limit 1")
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func InsertList(type_, name string, views int) error {
+	query := fmt.Sprintf(
+		`insert into lists (type, name, views) values ("%s", "%s", %v)`,
+		type_,
+		name,
+		views,
+	)
+	_, err := db.Exec(query)
+	return err
+}
+
+func AddObjectToList(list_id, object_id int) error {
+	query := fmt.Sprintf(
+		`insert into objects_in_list (list_id, object_id) values (%v, %v)`,
+		list_id,
+		object_id,
+	)
+	_, err := db.Exec(query)
+	return err
+}
+
+func AddRouteToList(list_id, route_id int) error {
+	query := fmt.Sprintf(
+		`insert into routes_in_list (list_id, route_id) values (%v, %v)`,
+		list_id,
+		route_id,
+	)
+	_, err := db.Exec(query)
+	return err
+}
