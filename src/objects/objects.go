@@ -47,7 +47,7 @@ func ObjectById(id int64) (*Object, error) {
 }
 
 func GetAllObjectInRange(a, b points.Point, filters filters.StringFilter) []Object {
-	objectsDB := db.GetDBObjectsInRange(a, b, filters.Int())
+	objectsDB := db.GetDBObjectsInRange(a, b, filters)
 	var objects []Object
 	for _, o := range objectsDB {
 		objects = append(objects, *(ObjectByDBObject(&o)))
@@ -57,7 +57,7 @@ func GetAllObjectInRange(a, b points.Point, filters filters.StringFilter) []Obje
 
 // RandomObjectsInRange gets a slice of random objects from the given range.
 func RandomObjectsInRange(a, b points.Point, count int64, filters filters.StringFilter) []Object {
-	objectsDB := db.GetDBObjectsInRange(a, b, filters.Int())
+	objectsDB := db.GetDBObjectsInRange(a, b, filters)
 	var objects []Object
 	for _, o := range objectsDB {
 		objects = append(objects, *(ObjectByDBObject(&o)))

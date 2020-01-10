@@ -2,6 +2,7 @@ package db
 
 import (
 	"config"
+	"filters"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
@@ -38,7 +39,7 @@ func DBObjectById(id int64) (*DBObject, error) {
 	return &point, nil
 }
 
-func GetDBObjectsInRange(a, b points.Point, filters int) []DBObject {
+func GetDBObjectsInRange(a, b points.Point, filters filters.StringFilter) []DBObject {
 	maxLat := math.Max(a.Lat, b.Lat)
 	minLat := math.Min(a.Lat, b.Lat)
 	maxLon := math.Max(a.Lon, b.Lon)
@@ -46,8 +47,8 @@ func GetDBObjectsInRange(a, b points.Point, filters int) []DBObject {
 
 	result := []DBObject{}
 	query := fmt.Sprintf(
-		"select * from points where (%f <= lat and lat <= %f and %f <= lon and lon <= %f and filters=%v)",
-		minLat, maxLat, minLon, maxLon, filters)
+		"select * from points where (%f <= lat and lat <= %f and %f <= lon and lon <= %f and type in (%s))",
+		minLat, maxLat, minLon, maxLon, filters.String())
 
 	err := db.Select(&result, query)
 	if err != nil {

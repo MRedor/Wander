@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"filters"
+	"fmt"
 	"points"
 	"errors"
 	"github.com/labstack/echo"
@@ -78,10 +80,15 @@ func getRandomObjects(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, CreateError(0, "count should be an integer"))
 	}
 
-	if c.Param("types") == "" {
+	if c.QueryParam("types") == "" {
 		return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, []string{}))
 	}
 
-	filters := parseFilters(c.Param("types"))
-	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, filters))
+	f := parseFilters(c.QueryParam("types"))
+	fmt.Println(f)
+	if !filters.Check(f) {
+		return c.JSON(http.StatusBadRequest, CreateError(0, "incorrect types"))
+	}
+
+	return c.JSON(http.StatusOK, objects.RandomObjectsInRange(*a, *b, count, f))
 }

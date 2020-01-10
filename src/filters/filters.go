@@ -1,5 +1,7 @@
 package filters
 
+import "fmt"
+
 type Filter struct {
 	Name  string
 	Value int
@@ -15,6 +17,20 @@ var (
 )
 
 type StringFilter []string
+
+func (f StringFilter) String() string {
+	if len(f) == 0 {
+		return "'museum', 'park', 'monument', 'chuch', 'building'"
+	}
+	result := ""
+	for i, t := range f {
+		result += fmt.Sprintf("'%s'", t)
+		if i != len(f) - 1 {
+			result += ", "
+		}
+	}
+	return result
+}
 
 func (f StringFilter) Int() int {
 	if len(f) == 0 {
@@ -38,4 +54,19 @@ func emptyFilterValue() int {
 		result += type_.Value
 	}
 	return result
+}
+
+func Check(f []string) bool {
+	for _, filter := range f {
+		correct := false
+		for _, type_ := range FilterTypes {
+			if filter == type_.Name {
+				correct = true
+			}
+		}
+		if !correct {
+			return false
+		}
+	}
+	return true
 }
