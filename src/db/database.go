@@ -121,7 +121,7 @@ func InsertDirectRoute(route DBRoute) (int64, error) {
 		route.Length, route.Time,
 		route.Objects, route.Points, route.Name,
 		route.Filters,
-		)
+	)
 	fmt.Println(query)
 
 	res, err := db.Exec(query)
@@ -141,9 +141,14 @@ func InsertRoundRoute(route DBRoute) (int64, error) {
 	query := fmt.Sprintf(
 		`insert into routes (type, start_lat, start_lon, radius, length, time, objects, points, name, filters) values ("%s", %f, %f, %f, %f, %f, %v, '%s', '%s', "%s", %v)`,
 		route.Type,
-		route.Start_lat, route.Start_lon, route.Radius,
-		route.Length, route.Time,
-		route.Objects, route.Points, route.Name,
+		route.Start_lat,
+		route.Start_lon,
+		route.Radius,
+		route.Length,
+		route.Time,
+		route.Objects,
+		route.Points,
+		route.Name,
 		route.Filters,
 	)
 
@@ -174,9 +179,9 @@ func DBListById(id int64) (*DBList, error) {
 func ObjectsForList(id int64) ([]DBObject, error) {
 	result := []DBObject{}
 	query := fmt.Sprintf(
-		"select id, lat, lon, type, name, description, time, img, address, prices, url " +
-		"from points inner join objects_in_list " +
-		"on objects_in_list.object_id=points.id where objects_in_list.list_id=%v", id)
+		"select id, lat, lon, type, name, description, time, img, address, prices, url "+
+			"from points inner join objects_in_list "+
+			"on objects_in_list.object_id=points.id where objects_in_list.list_id=%v", id)
 
 	err := db.Select(&result, query)
 	if err != nil {
@@ -190,9 +195,9 @@ func RoutesForList(id int64) ([]DBRoute, error) {
 	result := []DBRoute{}
 
 	query := fmt.Sprintf(
-		"select id, type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count " +
-		"from routes inner join routes_in_list " +
-		"on routes_in_list.route_id=routes.id where routes_in_list.list_id=%v", id)
+		"select id, type, start_lat, start_lon, finish_lat, finish_lon, radius, length, time, objects, points, name, count "+
+			"from routes inner join routes_in_list "+
+			"on routes_in_list.route_id=routes.id where routes_in_list.list_id=%v", id)
 
 	err := db.Select(&result, query)
 	if err != nil {
