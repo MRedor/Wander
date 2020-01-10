@@ -1,0 +1,1 @@
+ALTER TABLE routes MODIFY length FLOAT(10, 2)
