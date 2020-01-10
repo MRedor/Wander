@@ -4,3 +4,8 @@ database:
   user: "wander"
   password: "wanderpassword"
   database: "wander"
+email:
+  login: "??"
+  password: "??"
+  host: "smtp.gmail.com"
+  port: "587"
