@@ -11,7 +11,7 @@ type Point struct {
 }
 
 func (p Point) String() string {
-	return fmt.Sprintf("%f,%f", p.Lat, p.Lon)
+	return fmt.Sprintf("%f,%f", p.Lon, p.Lat)
 }
 
 func (p Point) Distance(a Point) float64 {

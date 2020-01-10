@@ -63,10 +63,9 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 		db.UpdateRouteCounter(route.Id)
 		return route, err
 	}
-	routeObjects := objects.RandomObjectsInRange(a, b, 10, filters)
 
-	routeObjects = objects.GetAllObjectInRange(a, b, filters)
-	pathObjects := routes.ABRoute{Start: a, Finish: b}.Build(routeObjects)
+	allObjects := objects.GetAllObjectInRange(a, b, filters)
+	pathObjects := routes.ABRoute{Start: a, Finish: b}.Build(allObjects)
 	routeMainPoints := []points.Point{a}
 	routeMainPoints = append(routeMainPoints, objects.PointsByObjects(pathObjects)...)
 	routeMainPoints = append(routeMainPoints, b)
@@ -75,7 +74,7 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	if err != nil {
 		return nil, err
 	}
-	route.Objects = routeObjects
+	route.Objects = pathObjects
 	route.Type = string(Direct)
 	route.Id, err = saveInDB(route, filters.Int())
 	if err != nil {
@@ -88,10 +87,11 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 
 func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*Route, error) {
 	route, err := getRoundRoute(start, radius, filters)
-	if route != nil || err != nil {
+	if route != nil {
 		db.UpdateRouteCounter(route.Id)
 		return route, err
 	}
+
 	a := points.Point{
 		Lat: start.Lat - routes.MetersToLat(float64(radius)),
 		Lon: start.Lon - routes.MetersToLon(start, float64(radius)),
@@ -212,8 +212,9 @@ func routeByOSRMResponce(resp osrm.Response) (*Route, error) {
 		Length: osrmRoute.Distance,
 		Time:   int(math.Round(osrmRoute.Duration)),
 	}
+
 	for _, g := range osrmRoute.Geometry.Coordinates {
-		route.Points = append(route.Points, points.Point{g[0], g[1]})
+		route.Points = append(route.Points, points.Point{g[1], g[0]})
 	}
 	return &route, nil
 }
