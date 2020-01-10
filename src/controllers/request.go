@@ -8,7 +8,7 @@ type RouteRequest struct {
 	Points  []points.Point `json:"points"`
 	Radius  int            `json:"radius"`
 	Type    string         `json:"type"`
-	Filters []string       `json:"filters"`
+	Filters []string       `json:"types"`
 }
 
 type RemovePointRequest struct {
