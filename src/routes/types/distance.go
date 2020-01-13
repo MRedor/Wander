@@ -51,7 +51,7 @@ func toDegrees(angrad float64) float64 {
 }
 
 func MetersToLat(distance float64) float64 {
-	return distance / float64(EquatorLength) / 360
+	return distance / (float64(EquatorLength) / 360.0)
 }
 
 func MetersToLon(a points.Point, distance float64) float64 {
