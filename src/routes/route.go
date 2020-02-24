@@ -27,7 +27,7 @@ type Route struct {
 	Length  float64          `json:"length"` //meters
 	Time    int              `json:"time"`   //seconds
 	Name    string           `json:"name"`
-	Type    string
+	Type    string           `json:"type"`
 	radius  int
 	filters int
 }
@@ -132,7 +132,12 @@ func saveInDB(route *Route, filters int) (int64, error) {
 		Name:       route.Name,
 		Filters:    filters,
 	}
-	objectsJSON, _ := json.Marshal(route.Objects)
+	var objectsIds []int64
+	for i := range route.Objects {
+		objectsIds = append(objectsIds, route.Objects[i].Id)
+	}
+
+	objectsJSON, _ := json.Marshal(objectsIds)
 	dbroute.Objects = string(objectsJSON)
 	pointsJSON, _ := json.Marshal(route.Points)
 	dbroute.Points = string(pointsJSON)
@@ -156,15 +161,15 @@ func routeByPoints(points_ []points.Point) (*Route, error) {
 	result, err := routeByOSRMResponce(osrm.GetOSRMByPoints(points_))
 	if err != nil {
 		route := Route{
-			Points:  []points.Point{},
-			Length:  0,
-			Time:    0,
+			Points: []points.Point{},
+			Length: 0,
+			Time:   0,
 		}
 		for i := 1; i < len(points_); i++ {
-			result, err := routeByOSRMResponce(osrm.GetOSRMByPoints([]points.Point{points_[i - 1], points_[i]}))
+			result, err := routeByOSRMResponce(osrm.GetOSRMByPoints([]points.Point{points_[i-1], points_[i]}))
 			if err != nil {
-				route.Points = append(route.Points, points_[i - 1], points_[i])
-				dist := routes.GetMetersDistanceByPoints(points_[i - 1], points_[i])
+				route.Points = append(route.Points, points_[i-1], points_[i])
+				dist := routes.GetMetersDistanceByPoints(points_[i-1], points_[i])
 				route.Length += dist
 				route.Time += getTimeByDistance(dist)
 			} else {
