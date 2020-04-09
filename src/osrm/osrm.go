@@ -1,13 +1,13 @@
 package osrm
 
 import (
-	"points"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"objects"
+	"points"
 	"strings"
 )
 
@@ -39,35 +39,36 @@ type Response struct {
 	}
 }
 
-func GetOSRMByObjects(points []objects.Object) Response {
+func GetOSRMByObjects(points []objects.Object) (Response, error) {
 	pointParameters := strings.Join(objects.PositionsToStrings(points), ";")
 	return getOSRM(pointParameters)
 }
 
-func GetOSRMByPoints(points []points.Point) Response {
+func GetOSRMByPoints(points []points.Point) (Response, error) {
 	pointParameters := strings.Join(objects.PointsToStrings(points), ";")
 	return getOSRM(pointParameters)
 }
 
-func getOSRM(parameters string) Response {
+func getOSRM(parameters string) (Response, error) {
 	url := fmt.Sprintf(
 		"http://travelpath.ru:5000/route/v1/foot/%s?alternatives=false&steps=false&geometries=geojson",
 		parameters,
 	)
+	var res Response
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return res, nil
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err.Error())
 	}
-	var res Response
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return res
+	return res, nil
 }

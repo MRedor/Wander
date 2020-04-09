@@ -70,7 +70,7 @@ func ABRoute(a, b points.Point, filters filters.StringFilter) (*Route, error) {
 	routeMainPoints = append(routeMainPoints, objects.PointsByObjects(pathObjects)...)
 	routeMainPoints = append(routeMainPoints, b)
 
-	route, err = routeByPoints(routeMainPoints)
+	route, err = getRouteByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func RoundRoute(start points.Point, radius int, filters filters.StringFilter) (*
 	routeMainPoints := append([]points.Point{start}, objects.PointsByObjects(pathObjects)...)
 	routeMainPoints = append(routeMainPoints, start)
 
-	route, err = routeByPoints(routeMainPoints)
+	route, err = getRouteByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
@@ -157,30 +157,44 @@ func getTimeByDistance(dist float64) int {
 	return int(math.Round(dist / speed))
 }
 
-func routeByPoints(points_ []points.Point) (*Route, error) {
-	result, err := routeByOSRMResponce(osrm.GetOSRMByPoints(points_))
-	if err != nil {
-		route := Route{
-			Points: []points.Point{},
-			Length: 0,
-			Time:   0,
-		}
-		for i := 1; i < len(points_); i++ {
-			result, err := routeByOSRMResponce(osrm.GetOSRMByPoints([]points.Point{points_[i-1], points_[i]}))
-			if err != nil {
-				route.Points = append(route.Points, points_[i-1], points_[i])
-				dist := routes.GetMetersDistanceByPoints(points_[i-1], points_[i])
-				route.Length += dist
-				route.Time += getTimeByDistance(dist)
-			} else {
-				route.Length += result.Length
-				route.Time += result.Time
-				route.Points = append(route.Points, result.Points...)
-			}
-		}
-		return &route, nil
+func getRouteByPoints(pathPoints []points.Point) (*Route, error) {
+	osrmPath, err := osrm.GetOSRMByPoints(pathPoints)
+	var route *Route
+	if err == nil {
+		route, err = routeByOSRMResponse(osrmPath)
 	}
-	return result, nil
+
+	if err != nil {
+		return getRouteByPointsParts(pathPoints)
+	}
+	return route, nil
+}
+
+func getRouteByPointsParts(pathPoints []points.Point) (*Route, error) {
+	route := Route{
+		Points: []points.Point{},
+		Length: 0,
+		Time:   0,
+	}
+	for i := 1; i < len(pathPoints); i++ {
+		// todo: make requests in parallel?
+		osrmRoutePart, err := osrm.GetOSRMByPoints([]points.Point{pathPoints[i-1], pathPoints[i]})
+		var routePart *Route
+		if err == nil {
+			routePart, err = routeByOSRMResponse(osrmRoutePart)
+		}
+		if err != nil {
+			route.Points = append(route.Points, pathPoints[i-1], pathPoints[i])
+			dist := routes.GetMetersDistanceByPoints(pathPoints[i-1], pathPoints[i])
+			route.Length += dist
+			route.Time += getTimeByDistance(dist)
+		} else {
+			route.Length += routePart.Length
+			route.Time += routePart.Time
+			route.Points = append(route.Points, routePart.Points...)
+		}
+	}
+	return &route, nil
 }
 
 func RouteById(id int64) (*Route, error) {
@@ -207,7 +221,7 @@ func getRoundRoute(start points.Point, radius int, filters filters.StringFilter)
 	return RouteByDBRoute(dbroute), nil
 }
 
-func routeByOSRMResponce(resp osrm.Response) (*Route, error) {
+func routeByOSRMResponse(resp osrm.Response) (*Route, error) {
 	if resp.Code != "Ok" {
 		return nil, errors.New("bad OSRM")
 	}
@@ -260,7 +274,7 @@ func removePointFromRoundRoute(route *Route, objectId int64) (*Route, error) {
 	radius := route.radius
 	routeFilters := route.filters
 
-	route, err := routeByPoints(routeMainPoints)
+	route, err := getRouteByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +303,7 @@ func removePointFromDirectRoute(route *Route, objectId int64) (*Route, error) {
 
 	routeFilters := route.filters
 
-	route, err := routeByPoints(routeMainPoints)
+	route, err := getRouteByPoints(routeMainPoints)
 	if err != nil {
 		return nil, err
 	}

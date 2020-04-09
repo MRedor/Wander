@@ -91,11 +91,15 @@ func PointsToStrings(points []points.Point) []string {
 }
 
 func ObjectByDBObject(o *db.DBObject) *Object {
+	image := ""
+	if o.Image.Valid {
+		image = "https://travelpath.ru" + o.Image.String
+	}
 	return &Object{
 		Id:          o.Id,
 		Name:        o.Name.String,
 		Position:    points.Point{Lat: o.Lat, Lon: o.Lon},
-		Image:       "https://travelpath.ru" + o.Image.String,
+		Image:       image,
 		Type:        o.Type,
 		Address:     o.Address.String,
 		Url:         o.Url.String,

@@ -52,7 +52,7 @@ func GetDBObjectsInRange(a, b points.Point, filters filters.StringFilter) []DBOb
 
 	err := db.Select(&result, query)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return nil
 	}
 
